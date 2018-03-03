@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
         ErrorOut("signal() failed");
 
     if(argc != 3)
-    	ErrorOut("Incorrect number of args.")
+    	ErrorOut("Incorrect number of args.\n");
 
     int server_socket;
     int client_socket;
@@ -24,8 +24,14 @@ int main(int argc, char *argv[])
     struct sockaddr_in client_addr;
     unsigned int client_len;
 
+    char *ftp_dir;
+
     if((server_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
-    	ErrorOut("Socket creation failed")
+    	ErrorOut("Socket creation failed");
+
+    server_port = atoi(argv[1]);
+
+    ftp_dir = argv[2];
 
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
@@ -45,6 +51,6 @@ int main(int argc, char *argv[])
     	if((client_socket = accept(server_socket, (struct sockaddr *) &client_addr, &client_len)) < 0)
     		ErrorOut("accept failed");
 
-    	IDSHandler(client_socket, argv)
+    	IDSHandler(client_socket, ftp_dir);
     }
 }

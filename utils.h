@@ -1,15 +1,16 @@
 #ifndef TRANSPORT_FOR_IDS
 #define TRANSPORT_FOR_IDS
 
-struct transport
+typedef struct 
 {
 	int size;
 	char *message;
-};
+} transport;
 
 void ErrorOut(char *msg);
-char *FTPExecute();
 
-void IDSHandler(int client_socket, char *argv[]);
+transport FTPExecute(uint32_t size, char *message, char *ftp_dir);
+
+void IDSHandler(int client_socket, char *ftp_dir);
 
 #endif

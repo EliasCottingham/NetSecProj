@@ -29,7 +29,7 @@ void SendComplete(int socket, const void *msg, int len, int flags)
 }
 
 
-void IDSHandler(int client_socket, char * argv[])
+void IDSHandler(int client_socket, char * ftp_dir)
 {
 	char buffer[2048];
 	memset(buffer, 0, sizeof(buffer));
@@ -39,15 +39,16 @@ void IDSHandler(int client_socket, char * argv[])
 
 	char *message;
 
-	struct transport response;
+	transport response;
 	while(1)
 	{
 		recv(client_socket, size_buffer, sizeof(size_buffer), 0);
-		size = ntohl(size_buffer)
+		size = ntohl((uint32_t) size_buffer);
+		// size = atoi(size_buffer);
 		message = (char *) calloc(size, 1);
 		//CHECK WHAT WAS RECEIVED IN message
 
-		response = FTPExecute(message);
+		response = FTPExecute(size, message, ftp_dir);
 		//CHECK WHAT WAS RECEIVED IN response
 
 		send(client_socket, response.message, response.size, 0);
