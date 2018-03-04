@@ -46,11 +46,13 @@ void IDSHandler(int client_socket, char * ftp_dir)
 		size = ntohl((uint32_t) size_buffer);
 		// size = atoi(size_buffer);
 		message = (char *) calloc(size, 1);
-		//CHECK WHAT WAS RECEIVED IN message
+		recv(client_socket, message, size, 0);
+		//CHECK WHAT WAS RECEIVED IN size_buffer+message
 
 		response = FTPExecute(size, message, ftp_dir);
-		//CHECK WHAT WAS RECEIVED IN response
+		//CHECK WHAT WAS PLACED IN response
 
 		send(client_socket, response.message, response.size, 0);
+		free(message);
 	}
 }
