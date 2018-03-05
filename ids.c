@@ -36,53 +36,6 @@ void SendComplete(int socket, const void *msg, int len, int flags)
 void IDSHandler(int client_socket, FILE *ids_file, char * ftp_dir)
 {
 
-	char file_holder[5000];
-	memset(&file_holder, 0, (50*100));
-
-	// fread(file_holder, 1, 5000, ids_file);
-
-	// if(feof(ids_file))
-	// {
-	// }
-	char len_buffer[2];
-	int len;
-	char *lines[50];
-	int i;
-	char temp;
-	for(i = 0; i < 50; i++){
-		printf("%d\n", i);
-		fread(len_buffer, 1, 2, ids_file);
-		len = atoi(len_buffer);
-		fread(&temp, 1, 1, ids_file);
-		if(temp != '|') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
-		lines[i] = (char *) calloc(len, 1);
-		fread(lines[i], 1, len, ids_file);
-		if(fread(&temp, 1, 1, ids_file) == 0)
-		{
-			printf("SHOULD BREAK");
-			break;
-		}
-		if(temp != '\n') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
-		printf("%s\n", lines[i]);
-	}
-
-
-
-
-	// while(fread(line[i], 100, ids_file))
-	// {
-	// 	printf("%s\n", line[i]);
-	// 	i++;
-	// }
-
-	// char *patterns = (char *) calloc(i, 1);
-	// int j;
-	// for(j=0; j <= i; j++)
-	// {
-
-	// 	patterns[j] =
-	// }
-
 	char buffer[2048];
 	memset(buffer, 0, sizeof(buffer));
 	char size_buffer[4];
@@ -97,7 +50,6 @@ void IDSHandler(int client_socket, FILE *ids_file, char * ftp_dir)
 
 	while(1)
 	{
-		read_holder = 0;
 
 		recv(client_socket, size_buffer, sizeof(size_buffer), 0);
 		// size = ntohl((uint32_t) size_buffer);

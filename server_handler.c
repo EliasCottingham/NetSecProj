@@ -71,6 +71,28 @@ int main(int argc, char *argv[])
 		}
     ids_file = fopen(ids_filename, "rb");
 
+    char len_buffer[2];
+	char *lines[51];
+	memset(lines, 51*sizeof(char *), 0);
+	int i;
+	char temp;
+	for(i = 0; i < 50; i++){
+		printf("%d\n", i);
+		fread(len_buffer, 1, 2, ids_file);
+		len = atoi(len_buffer);
+		fread(&temp, 1, 1, ids_file);
+		if(temp != '|') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+		lines[i] = (char *) calloc(len, 1);
+		fread(lines[i], 1, len, ids_file);
+		if(fread(&temp, 1, 1, ids_file) == 0)
+		{
+			printf("SHOULD BREAK");
+			break;
+		}
+		if(temp != '\n') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+		printf("%s\n", lines[i]);
+	}
+
     // ENDING HERE
 
     while(1)
