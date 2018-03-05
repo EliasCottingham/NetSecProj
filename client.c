@@ -14,6 +14,7 @@
 int cmd_helper(char* cmd);
 int get_fname(char* cmd, char** fname);
 int get_path(char* path, char* fname, char** totalpath);
+void recv_response(int* sock, char** response_buffer, int* rec_len);
 
 int main(int argc, char *argv[]){
   /*Client takes port number and ip as parameters.*/
@@ -57,12 +58,11 @@ int main(int argc, char *argv[]){
   }
 
   printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
-  char *command;
-  char *response_buffer;
-  char len_buffer[sizeof(size_t)];
+  char* command;
+  char* response_buffer;
+
   len=0;
   int rec_len;
-  int expect_len;
   char cmd_type;
   while(1){
     printf("\n->");
@@ -95,16 +95,8 @@ int main(int argc, char *argv[]){
         free(fname);
         free(totalpath);
 
-        //Should be helper function
-        printf("WAITING FOR RESPONSE:\n");
-        recv(sock, len_buffer, sizeof(len_buffer), 0);
-        expect_len = atoi(len_buffer);
-        printf("Expect Len: %d\n", expect_len);
-        response_buffer = (char *) calloc(expect_len, 1);
-        rec_len = recv(sock, response_buffer, expect_len, 0);
-        printf("Received: %s\n", response_buffer);
-        printf("Rec_len: %d\n", rec_len);
-
+        recv_response(&sock, &response_buffer, &rec_len);
+        free(response_buffer);
         break;
 
       case(1):
@@ -119,16 +111,8 @@ int main(int argc, char *argv[]){
         send(sock, fname, len, 0);
         free(fname);
 
-        //Should be helper function
-        printf("WAITING FOR RESPONSE:\n");
-        recv(sock, len_buffer, sizeof(len_buffer), 0);
-        expect_len = atoi(len_buffer);
-        printf("Expect Len: %d\n", expect_len);
-        response_buffer = (char *) calloc(expect_len, 1);
-        rec_len = recv(sock, response_buffer, expect_len, 0);
-        printf("Received: %s\n", response_buffer);
-        printf("Rec_len: %d\n", rec_len);
-
+        recv_response(&sock, &response_buffer, &rec_len);
+        free(response_buffer);
         break;
 
       case(2):
@@ -138,16 +122,8 @@ int main(int argc, char *argv[]){
         send(sock, &len, sizeof(len), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
 
-        //Should be helper function
-        printf("WAITING FOR RESPONSE:\n");
-        recv(sock, len_buffer, sizeof(len_buffer), 0);
-        expect_len = atoi(len_buffer);
-        printf("Expect Len: %d\n", expect_len);
-        response_buffer = (char *) calloc(expect_len, 1);
-        rec_len = recv(sock, response_buffer, expect_len, 0);
-        printf("Received: %s\n", response_buffer);
-        printf("Rec_len: %d\n", rec_len);
-
+        recv_response(&sock, &response_buffer, &rec_len);
+        free(response_buffer);
         break;
 
       case(3):
@@ -162,6 +138,20 @@ int main(int argc, char *argv[]){
   }
 }
 
+
+void recv_response(int* sock, char** response_buffer, int* rec_len){
+  int expect_len;
+  char len_buffer[sizeof(size_t)];
+
+  printf("WAITING FOR RESPONSE:\n");
+  recv(*sock, len_buffer, sizeof(len_buffer), 0);
+  expect_len = atoi(len_buffer);
+  printf("Expect Len: %d\n", expect_len);
+  *response_buffer = (char *) calloc(expect_len, 1);
+  *rec_len = recv(*sock, *response_buffer, expect_len, 0);
+  printf("Received: %s\n", *response_buffer);
+  printf("Rec_len: %d\n", *rec_len);
+}
 
 int get_fname(char* cmd, char** fname){
   int len = strlen(cmd);
