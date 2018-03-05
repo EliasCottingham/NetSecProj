@@ -80,9 +80,10 @@ int main(int argc, char *argv[]){
         }
         stat(totalpath, &sb);
         // size_t size = htonl(sb.st_size);
-        size_t size = sb.st_size+1;
+        size_t size = sb.st_size+1+strlen(fname);
         send(sock, &size, sizeof(size), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
+        send(sock, fname, len, 0);
 
         FILE *fp;
         fp = fopen(totalpath, "r");
@@ -113,7 +114,7 @@ int main(int argc, char *argv[]){
           break;
         }
         command = fname;
-        len = strlen(command)+1;
+        len = strlen(command)+1+strlen(fname);
         send(sock, &len, sizeof(len), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
         send(sock, fname, len, 0);
@@ -137,7 +138,6 @@ int main(int argc, char *argv[]){
         len = strlen(command)+1;
         send(sock, &len, sizeof(len), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
-        send(sock, "ls", strlen("ls"), 0);
 
         //Should be helper function
         printf("WAITING FOR RESPONSE:\n");
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]){
         rec_len = recv(sock, response_buffer, expect_len, 0);
         printf("Received: %s\n", response_buffer);
         printf("Rec_len: %d\n", rec_len);
-        
+
         break;
 
       case(3):
