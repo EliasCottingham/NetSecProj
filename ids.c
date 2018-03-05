@@ -56,7 +56,6 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 		printf("IN IDS RECEIVING LOOP\n");
 		recv(client_socket, size_buffer, sizeof(size_buffer), 0);
 		size = (int) *size_buffer;
-		// size = atoi(size_buffer);
 		printf("Expected Size: %d\n", size);
 		size_holder = 0;
 		message = (char *) calloc(size, 1);
@@ -68,6 +67,7 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 			printf("recv_size: %d size_holder: %d size: %d\n", recv_size, size_holder, size);
 			read_size = recv(client_socket, buffer, recv_size, 0);
 			printf("read_size: %d\n",read_size);
+      printf("Recieved: %s\n", buffer);
 			if(read_size <= 0){
 				printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
 				goto break_from_receiving;

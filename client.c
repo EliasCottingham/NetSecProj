@@ -93,6 +93,17 @@ int main(int argc, char *argv[]){
         fclose(fp);
         free(fname);
         free(totalpath);
+
+        //Should be helper function
+        printf("WAITING FOR RESPONSE:\n");
+        recv(sock, len_buffer, sizeof(len_buffer), 0);
+        expect_len = atoi(len_buffer);
+        printf("Expect Len: %d\n", expect_len);
+        response_buffer = (char *) calloc(expect_len, 1);
+        rec_len = recv(sock, response_buffer, expect_len, 0);
+        printf("Received: %s\n", response_buffer);
+        printf("Rec_len: %d\n", rec_len);
+
         break;
 
       case(1):
@@ -106,6 +117,18 @@ int main(int argc, char *argv[]){
         send(sock, &len, sizeof(len), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
         send(sock, fname, len, 0);
+        free(fname);
+
+        //Should be helper function
+        printf("WAITING FOR RESPONSE:\n");
+        recv(sock, len_buffer, sizeof(len_buffer), 0);
+        expect_len = atoi(len_buffer);
+        printf("Expect Len: %d\n", expect_len);
+        response_buffer = (char *) calloc(expect_len, 1);
+        rec_len = recv(sock, response_buffer, expect_len, 0);
+        printf("Received: %s\n", response_buffer);
+        printf("Rec_len: %d\n", rec_len);
+
         break;
 
       case(2):
@@ -115,26 +138,31 @@ int main(int argc, char *argv[]){
         send(sock, &len, sizeof(len), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
         send(sock, "ls", strlen("ls"), 0);
+
+        //Should be helper function
+        printf("WAITING FOR RESPONSE:\n");
+        recv(sock, len_buffer, sizeof(len_buffer), 0);
+        expect_len = atoi(len_buffer);
+        printf("Expect Len: %d\n", expect_len);
+        response_buffer = (char *) calloc(expect_len, 1);
+        rec_len = recv(sock, response_buffer, expect_len, 0);
+        printf("Received: %s\n", response_buffer);
+        printf("Rec_len: %d\n", rec_len);
+        
         break;
+
       case(3):
         printf("Exit cmd.\n");
         free(path);
         exit(1);
       case(-1):
-        printf("Error.\n");
+        printf("Error: Command not recognived.\n");
+        printf("Accepted commands are: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
         break;
     }
-
-    printf("WAITING FOR RESPONSE:\n");
-    recv(sock, len_buffer, sizeof(len_buffer), 0);
-    expect_len = atoi(len_buffer);
-    printf("Expect Len: %d\n", expect_len);
-    response_buffer = (char *) calloc(expect_len, 1);
-    rec_len = recv(sock, response_buffer, expect_len, 0);
-    printf("Received: %s\n", response_buffer);
-    printf("Rec_len: %d\n", rec_len);
   }
 }
+
 
 int get_fname(char* cmd, char** fname){
   int len = strlen(cmd);
