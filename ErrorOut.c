@@ -5,7 +5,6 @@
 
 void ErrorOut(char *msg)
 {
-	printf(msg);
-	printf("\n");
+	printf("%s\n",msg);
 	exit(1);
 }

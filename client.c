@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
         }
         stat(totalpath, &sb);
         size_t size = htonl(sb.st_size);
-        send(sock, &size, sizeof(size_t), 0);
+        send(sock, &size, sizeof(size), 0);
 
         FILE *fp;
         fp = fopen(totalpath, "r");

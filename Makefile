@@ -6,7 +6,7 @@ CXXFLAGS = -g -Wall $(INCLUDES)
 
 .PHONY: default
 default: server_handler client
-
+	rm -f *.o *~
 
 server_handler: ids.o ftp.o ErrorOut.o
 
@@ -25,5 +25,4 @@ clean:
 	rm -f *.o *~ a.out core server_handler client
 
 .PHONY: all
-all:
-	clean default
+all: clean default
