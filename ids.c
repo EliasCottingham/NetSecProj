@@ -18,19 +18,37 @@ void SendComplete(int socket, const void *msg, int len, int flags)
 	while((sent = send(socket, message, len, flags)) < len)
 	{
 		if(sent == -1)
-			ErrorOut("Error on communication with ftp server");
+			ErrorOut("Error on communication with ftp server 1");
 
 		sum_sent += sent;
 		message = ((char *) msg) + sum_sent;
 		len-=sent;
 	}
 	if(sent == -1)
-		ErrorOut("Error on communication with ftp server");
+		ErrorOut("Error on communication with ftp server 1");
 }
 
-
-void IDSHandler(int client_socket, char * ftp_dir)
+int ScanData(char *data, int length, char *signatures[])
 {
+
+}
+
+void IDSHandler(int client_socket, FILE *ids_file, char * ftp_dir)
+{
+
+	// char file_holder[50][100];
+	// memset(&patterns, 0, (50*32));
+	// int i = 0;
+	// while(fgets(line[i], 100, ids_file))
+	// {
+	// 	printf("%s\n", line[i]);
+	// 	i++;
+	// }
+
+	// char *patterns = (char *) calloc(i, 1);
+	// int j;
+	// for(j=0; j <=)
+
 	char buffer[2048];
 	memset(buffer, 0, sizeof(buffer));
 	char size_buffer[4];
@@ -40,18 +58,24 @@ void IDSHandler(int client_socket, char * ftp_dir)
 	char *message;
 
 	transport response;
+
 	while(1)
 	{
 		recv(client_socket, size_buffer, sizeof(size_buffer), 0);
-		size = ntohl((uint32_t) size_buffer);
+		// size = ntohl((uint32_t) size_buffer);
+		size = (int) *size_buffer;
 		// size = atoi(size_buffer);
 		message = (char *) calloc(size, 1);
 		recv(client_socket, message, size, 0);
+		printf("%.5s\n", message);
+		printf("%u\n", size);
 		//CHECK WHAT WAS RECEIVED IN size_buffer+message
 
 		response = FTPExecute(size, message, ftp_dir);
 		//CHECK WHAT WAS PLACED IN response
-
+		printf("%lu\n", strlen(response.message));
+		printf("%s", response.message);
+		printf("\n\n\n");
 		send(client_socket, response.message, response.size, 0);
 		free(message);
 	}

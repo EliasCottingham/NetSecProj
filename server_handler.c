@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 	if(signal(SIGPIPE, SIG_IGN) == SIG_ERR)
         ErrorOut("signal() failed");
 
-    if(argc != 3)
+    if(argc != 4)
     	ErrorOut("Incorrect number of args.\n");
 
     int server_socket;
@@ -25,13 +25,24 @@ int main(int argc, char *argv[])
     unsigned int client_len;
 
     char *ftp_dir;
+    char *ids_filename;
+    FILE *ids_file;
 
     if((server_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     	ErrorOut("Socket creation failed");
 
+    // MAKE SURE TO ADD INPUT HANDLING HERE
     server_port = atoi(argv[1]);
 
     ftp_dir = argv[2];
+
+    printf("%c", argv[2][3]);
+
+    ids_filename = argv[3];
+
+    ids_file = fopen(ids_filename, "rb");
+
+    // ENDING HERE
 
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
@@ -51,6 +62,6 @@ int main(int argc, char *argv[])
     	if((client_socket = accept(server_socket, (struct sockaddr *) &client_addr, &client_len)) < 0)
     		ErrorOut("accept failed");
 
-    	IDSHandler(client_socket, ftp_dir);
+    	IDSHandler(client_socket, ids_file, ftp_dir);
     }
 }
