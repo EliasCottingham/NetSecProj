@@ -72,32 +72,34 @@ int main(int argc, char *argv[])
     ids_file = fopen(ids_filename, "rb");
 
     char len_buffer[2];
-		char *signatures[51];
-		memset(signatures, 51*sizeof(char *), 0);
-		int i;
-		char temp;
-		for(i = 0; i < 50; i++){
-			len=0;
-			memset(len_buffer, 2, 0);
-			if(fread(len_buffer, 1, 2, ids_file) == 0)
-			{
-				printf("Finished reading signatures.\n");
-				break;
-			}
-			len = atoi(len_buffer);
-			fread(&temp, 1, 1, ids_file);
-			if(temp != '|') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
-			signatures[i] = (char *) calloc(len, 1);
-			fread(signatures[i], 1, len, ids_file);
-			printf("signatures[%d]: %s\n", i, signatures[i]);
-			if(fread(&temp, 1, 1, ids_file) == 0)
-			{
-				printf("breaking from temp 2 read\n");
-				break;
-			}
-			if(temp != '\n') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+
+
+	char *signatures[51];
+	memset(signatures, 51*sizeof(char *), 0);
+	int i;
+	char temp;
+	for(i = 0; i < 50; i++){
+		len=0;
+		memset(len_buffer, 2, 0);
+		memset(&temp, 1, 0);
+		if(fread(len_buffer, 1, 2, ids_file) == 0)
+		{
+			printf("Finished reading signatures.\n");
+	    break;
 		}
-		fclose(ids_file);
+		len = atoi(len_buffer);
+		fread(&temp, 1, 1, ids_file);
+		if(temp != '|') ErrorOut("Error reading IDS file on expected pipe ('|') separator. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+		signatures[i] = (char *) calloc(len, 1);
+		fread(signatures[i], 1, len, ids_file);
+		printf("signatures[%d]: %s\n", i, signatures[i]);
+		if(fread(&temp, 1, 1, ids_file) == 0)
+		{
+			printf("Finished reading signatures.\n");
+			break;
+		}
+		if(temp != '\n') ErrorOut("Error reading IDS file on expected newline ('\\n'). Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+	}
 
     // ENDING HERE
 

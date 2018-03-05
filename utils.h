@@ -1,9 +1,11 @@
 #ifndef TRANSPORT_FOR_IDS
 #define TRANSPORT_FOR_IDS
 
+#define CHUNK 1500
+
 typedef struct 
 {
-	int size;
+	size_t size;
 	char *message;
 } transport;
 
