@@ -28,13 +28,13 @@ void SendComplete(int socket, const void *msg, int len, int flags)
 		ErrorOut("Error on communication with ftp server 1");
 }
 
-int ScanData(char *data, int length, char *signatures[])
+int ScanData(char *data, int length, transport signatures[])
 {
   //TODO: Need to scan each recieved buffer for signatures
   return 1;
 }
 
-void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
+void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir)
 {
 
 	char buffer[CHUNK];
@@ -46,8 +46,8 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 	char *message;
 
 	transport response;
-	int read_size;
-	int recv_size;
+	int actual_receive_size;
+	int expected_receive_size;
 	int send_size;
 	int size_holder;
 
@@ -63,20 +63,20 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 		while(size_holder < size)
 		{
 			memset(buffer, 0, sizeof(buffer));
-			recv_size = ((size-size_holder) < CHUNK) ? (size-size_holder): CHUNK;
-			printf("recv_size: %d size_holder: %d size: %d\n", recv_size, size_holder, size);
-			read_size = recv(client_socket, buffer, recv_size, 0);
-			printf("read_size: %d\n",read_size);
-      printf("Recieved: %s\n", buffer);
-			if(read_size <= 0){
+			expected_receive_size = ((size-size_holder) < CHUNK) ? (size-size_holder): CHUNK;
+			printf("expected_receive_size: %d size_holder: %d size: %d\n", expected_receive_size, size_holder, size);
+			actual_receive_size = recv(client_socket, buffer, expected_receive_size, 0);
+			printf("actual_receive_size: %d\n",actual_receive_size);
+      		printf("Recieved: %s\n", buffer);
+			if(actual_receive_size <= 0){
 				printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
 				goto break_from_receiving;
 			}
 			printf("Receive buffer content: %s\n", buffer);
-			if(ScanData(buffer, read_size, ids_signatures))
+			if(ScanData(buffer, actual_receive_size, ids_signatures))
 			{
-				memcpy((message+size_holder), buffer, read_size);
-				size_holder += read_size;
+				memcpy((message+size_holder), buffer, actual_receive_size);
+				size_holder += actual_receive_size;
 			}
 		}
 		printf("\nRECEIVE LOOP END\nSize expected: %d, Size received: %d\n", size, size_holder);
@@ -87,7 +87,7 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 		transport input = {size, message};
 		response = FTPExecute(input, ftp_dir);
 
-		printf("Message response len:%lu\n", strlen(response.message));
+		printf("Message response strlen:%lu\n", strlen((response.message+1)));
 		printf("Message response size: %zu\n", response.size);
 		printf("Message response: %s\n", response.message);
 		printf("\n\n\n");

@@ -80,10 +80,11 @@ int main(int argc, char *argv[]){
         }
         stat(totalpath, &sb);
         // size_t size = htonl(sb.st_size);
-        size_t size = strlen(fname)+sb.st_size+1;
+        // Size here is the overall size of the message sent to the ids.  Of format <char type of command><string filename><EOF delimited file>
+        size_t size = 1+(strlen(fname)+1)+sb.st_size;
         send(sock, &size, sizeof(size), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
-        send(sock, fname, len, 0);
+        send(sock, fname, strlen(fname)+1, 0);
 
         FILE *fp;
         fp = fopen(totalpath, "r");

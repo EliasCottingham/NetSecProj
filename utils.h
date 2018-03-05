@@ -13,6 +13,6 @@ void ErrorOut(char *msg);
 
 transport FTPExecute(transport input, char *ftp_dir);
 
-void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir);
+void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir);
 
 #endif
