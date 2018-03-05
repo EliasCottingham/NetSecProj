@@ -29,6 +29,18 @@ int main(int argc, char *argv[]){
     exit(1);
   }
 
+  if((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1){
+    printf("Socket creation failed.");
+    exit(1);
+  }
+  server.sin_family = AF_INET;
+  server.sin_port = htons(atoi(argv[1]));
+  server.sin_addr.s_addr = inet_addr(argv[2]);
+  if((connection = connect(sock,(struct sockaddr*)&server, sizeof(server))) == -1){
+    printf("Connection failed.\n");
+    exit(1);
+  }
+
   struct stat sb;
   if(!(stat(argv[3], &sb) == 0 && S_ISDIR(sb.st_mode))){
     printf("Error: Directory provided [%s] does not exist.\n", argv[3]);
@@ -43,19 +55,6 @@ int main(int argc, char *argv[]){
   } else {
     path = argv[3];
   }
-
-  if((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1){
-    printf("Socket creation failed.");
-    exit(1);
-  }
-  server.sin_family = AF_INET;
-  server.sin_port = htons(atoi(argv[1]));
-  server.sin_addr.s_addr = inet_addr(argv[2]);
-  if((connection = connect(sock,(struct sockaddr*)&server, sizeof(server))) == -1){
-    printf("Connection failed.\n");
-    exit(1);
-  }
-
 
   printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
   while(1){
@@ -128,7 +127,7 @@ int get_path(char* path, char* fname, char** totalpath){
   strncpy(*totalpath, path, strlen(path));
   strcat(*totalpath, fname);
   struct stat sb;
-  if (!(stat(*totalpath, &sb) == 0)){
+  if (!(stat(*totalpath, &sb) == 0 && !S_ISDIR(sb.st_mode))){
     printf("Error: File provided [%s] is not located with in the current working directory [%s].\n", fname, path);
     return -1;
   }
