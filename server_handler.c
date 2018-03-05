@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
 	for(i = 0; i < 50; i++){
 		len=0;
 		memset(len_buffer, 2, 0);
+		memset(&temp, 1, 0);
 		printf("Line: %d\n", i);
 		if(fread(len_buffer, 1, 2, ids_file) == 0)
 		{
@@ -89,7 +90,7 @@ int main(int argc, char *argv[])
 		printf("Length: %d ", len);
 		fread(&temp, 1, 1, ids_file);
 		printf("Temp 1: %c ", temp);
-		if(temp != '|') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+		if(temp != '|') ErrorOut("Error reading IDS file on expected pipe ('|') separator. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
 		lines[i] = (char *) calloc(len, 1);
 		fread(lines[i], 1, len, ids_file);
 		printf("Line: %s ", lines[i]);
@@ -99,7 +100,7 @@ int main(int argc, char *argv[])
 			break;
 		}
 		printf("Temp 2: %c", temp);
-		if(temp != '\n') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+		if(temp != '\n') ErrorOut("Error reading IDS file on expected newline ('\\n'). Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
 		// printf("%s\n", lines[i]);
 	}
 

@@ -58,7 +58,11 @@ int main(int argc, char *argv[]){
 
   printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
   char *command;
+  char *response_buffer;
+  char len_buffer[sizeof(size_t)];
   len=0;
+  int rec_len;
+  int expect_len;
   char cmd_type;
   while(1){
     printf("\n->");
@@ -120,6 +124,15 @@ int main(int argc, char *argv[]){
         printf("Error.\n");
         break;
     }
+
+    printf("WAITING FOR RESPONSE:\n");
+    recv(sock, len_buffer, sizeof(len_buffer), 0);
+    expect_len = atoi(len_buffer);
+    printf("Expect Len: %d\n", expect_len);
+    response_buffer = (char *) calloc(expect_len, 1);
+    rec_len = recv(sock, response_buffer, expect_len, 0);
+    printf("Received: %s\n", response_buffer);
+    printf("Rec_len: %d\n", rec_len);
   }
 }
 
