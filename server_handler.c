@@ -72,48 +72,42 @@ int main(int argc, char *argv[])
     ids_file = fopen(ids_filename, "rb");
 
     char len_buffer[2];
-	char *lines[51];
-	memset(lines, 51*sizeof(char *), 0);
-	int i;
-	char temp;
-	for(i = 0; i < 50; i++){
-		len=0;
-		memset(len_buffer, 2, 0);
-		printf("Line: %d\n", i);
-		if(fread(len_buffer, 1, 2, ids_file) == 0)
-		{
-			printf("Breaking from len read\n");
-			break;
+		char *signatures[51];
+		memset(signatures, 51*sizeof(char *), 0);
+		int i;
+		char temp;
+		for(i = 0; i < 50; i++){
+			len=0;
+			memset(len_buffer, 2, 0);
+			if(fread(len_buffer, 1, 2, ids_file) == 0)
+			{
+				printf("Finished reading signatures.\n");
+				break;
+			}
+			len = atoi(len_buffer);
+			fread(&temp, 1, 1, ids_file);
+			if(temp != '|') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+			signatures[i] = (char *) calloc(len, 1);
+			fread(signatures[i], 1, len, ids_file);
+			printf("signatures[%d]: %s\n", i, signatures[i]);
+			if(fread(&temp, 1, 1, ids_file) == 0)
+			{
+				printf("breaking from temp 2 read\n");
+				break;
+			}
+			if(temp != '\n') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
 		}
-		len = atoi(len_buffer);
-		printf("Length: %d ", len);
-		fread(&temp, 1, 1, ids_file);
-		printf("Temp 1: %c ", temp);
-		if(temp != '|') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
-		lines[i] = (char *) calloc(len, 1);
-		fread(lines[i], 1, len, ids_file);
-		printf("Line: %s ", lines[i]);
-		if(fread(&temp, 1, 1, ids_file) == 0)
-		{
-			printf("breaking from temp 2 read\n");
-			break;
-		}
-		printf("Temp 2: %c", temp);
-		if(temp != '\n') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
-		// printf("%s\n", lines[i]);
-	}
+		fclose(ids_file);
 
     // ENDING HERE
 
     while(1)
     {
     	client_len = sizeof(client_addr);
-
     	if((client_socket = accept(server_socket, (struct sockaddr *) &client_addr, &client_len)) < 0){
 				free(ftp_dir);
 				ErrorOut("accept failed");
 			}
-
-    	IDSHandler(client_socket, lines, ftp_dir);
+    	IDSHandler(client_socket, signatures, ftp_dir);
     }
 }

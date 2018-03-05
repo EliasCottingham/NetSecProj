@@ -30,7 +30,8 @@ void SendComplete(int socket, const void *msg, int len, int flags)
 
 int ScanData(char *data, int length, char *signatures[])
 {
-	return 1;
+  //TODO: Need to scan each recieved buffer for signatures
+  return 1;
 }
 
 void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
@@ -45,8 +46,6 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 	char *message;
 
 	transport response;
-
-	int read_holder;
 	int read_size;
 	int size_holder;
 
@@ -54,9 +53,7 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 	{
 		printf("IN IDS RECEIVING LOOP\n");
 		recv(client_socket, size_buffer, sizeof(size_buffer), 0);
-		// size = ntohl((uint32_t) size_buffer);
 		size = (int) *size_buffer;
-		// size = atoi(size_buffer);
 		printf("SIZE: %d\n", size);
 		size_holder = 0;
 		message = (char *) calloc(size, 1);
@@ -65,7 +62,7 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 		{
 			memset(buffer, 0, sizeof(buffer));
 			read_size = recv(client_socket, buffer, sizeof(buffer), 0);
-			printf("%s", buffer);
+			printf("Data recieved: %s", buffer);
 			if(ScanData(buffer, read_size, ids_signatures))
 			{
 				memcpy((message+size_holder), buffer, read_size);
@@ -73,17 +70,13 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 			}
 		}
 		printf("\nRECEIVE LOOP END\nSize expected: %d, Size received: %d\n", size, size_holder);
-
-		// recv(client_socket, message, size, 0);
-		printf("%s\n", message);
-		printf("%u\n", size);
-		//CHECK WHAT WAS RECEIVED IN size_buffer+message
+		printf("Message: %s\n", message);
+		printf("Size: %u\n", size);
 		transport input = {size, message};
 		response = FTPExecute(input, ftp_dir);
 		//CHECK WHAT WAS PLACED IN response
-		printf("%lu\n", strlen(response.message));
-		printf("%s", response.message);
-		printf("\n\n\n");
+		printf("Response message strlen: %lu\n", strlen(response.message));
+		printf("Response message: %s\n", response.message);
 		send(client_socket, response.message, response.size, 0);
 		free(message);
 	}
