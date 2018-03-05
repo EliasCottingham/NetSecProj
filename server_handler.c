@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 		printf("Line: %d\n", i);
 		if(fread(len_buffer, 1, 2, ids_file) == 0)
 		{
-			printf("Breaking from len read");
+			printf("Breaking from len read\n");
 			break;
 		}
 		len = atoi(len_buffer);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 		printf("Line: %s ", lines[i]);
 		if(fread(&temp, 1, 1, ids_file) == 0)
 		{
-			printf("breaking from temp 2 read");
+			printf("breaking from temp 2 read\n");
 			break;
 		}
 		printf("Temp 2: %c", temp);

@@ -57,11 +57,14 @@ int main(int argc, char *argv[]){
   }
 
   printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
+  char *command;
+  len=0;
+  char cmd_type;
   while(1){
     printf("\n->");
     fflush(stdin);
     fgets(cmd, 100, stdin);
-    switch(cmd_helper(cmd)){
+    switch(cmd_type = cmd_helper(cmd)){
       case(0):
         printf("Put cmd.\n");
         if (get_fname(cmd, &fname)==-1){
@@ -72,8 +75,10 @@ int main(int argc, char *argv[]){
           break;
         }
         stat(totalpath, &sb);
-        size_t size = htonl(sb.st_size);
+        // size_t size = htonl(sb.st_size);
+        size_t size = sb.st_size+1;
         send(sock, &size, sizeof(size), 0);
+        send(sock, &cmd_type, sizeof(cmd_type), 0);
 
         FILE *fp;
         fp = fopen(totalpath, "r");
@@ -92,11 +97,19 @@ int main(int argc, char *argv[]){
           free(fname);
           break;
         }
-        send(sock, fname, strlen(fname), 0);
+        command = fname;
+        len = strlen(command)+1;
+        send(sock, &len, sizeof(len), 0);
+        send(sock, &cmd_type, sizeof(cmd_type), 0);
+        send(sock, fname, len, 0);
         break;
 
       case(2):
         printf("LS cmd.\n");
+        command = "ls";
+        len = strlen(command)+1;
+        send(sock, &len, sizeof(len), 0);
+        send(sock, &cmd_type, sizeof(cmd_type), 0);
         send(sock, "ls", strlen("ls"), 0);
         break;
       case(3):

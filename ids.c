@@ -52,27 +52,30 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 
 	while(1)
 	{
+		printf("IN IDS RECEIVING LOOP\n");
 		recv(client_socket, size_buffer, sizeof(size_buffer), 0);
 		// size = ntohl((uint32_t) size_buffer);
 		size = (int) *size_buffer;
 		// size = atoi(size_buffer);
-
+		printf("SIZE: %d\n", size);
 		size_holder = 0;
 		message = (char *) calloc(size, 1);
-
+		printf("RECEIVE LOOP START:\n");
 		while(size_holder < size)
 		{
+			memset(buffer, 0, sizeof(buffer));
 			read_size = recv(client_socket, buffer, sizeof(buffer), 0);
+			printf("%s", buffer);
 			if(ScanData(buffer, read_size, ids_signatures))
 			{
 				memcpy((message+size_holder), buffer, read_size);
 				size_holder += read_size;
 			}
 		}
-		printf("Size expected: %d, Size received: %d\n", size, size_holder);
+		printf("\nRECEIVE LOOP END\nSize expected: %d, Size received: %d\n", size, size_holder);
 
 		// recv(client_socket, message, size, 0);
-		printf("%.5s\n", message);
+		printf("%s\n", message);
 		printf("%u\n", size);
 		//CHECK WHAT WAS RECEIVED IN size_buffer+message
 		transport input = {size, message};
