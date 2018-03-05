@@ -69,12 +69,12 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 			recv_size = ((size-size_holder) < CHUNK) ? (size-size_holder): CHUNK;
 			printf("recv_size: %d size_holder: %d size: %d\n", recv_size, size_holder, size);
 			read_size = recv(client_socket, buffer, recv_size, 0);
-			printf("read_size: %d",read_size);
+			printf("read_size: %d\n",read_size);
 			if(read_size <= 0){
 				printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
 				goto break_from_receiving;
 			}
-			printf("%s\n", buffer);
+			printf("Receive buffer content: %s\n", buffer);
 			if(ScanData(buffer, read_size, ids_signatures))
 			{
 				memcpy((message+size_holder), buffer, read_size);
