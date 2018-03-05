@@ -81,7 +81,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir)
 		}
 		printf("\nRECEIVE LOOP END\nSize expected: %d, Size received: %d\n", size, size_holder);
 
-		printf("Message: %s\n", message);
+		printf("Message without cmd type: %s\n", (message+1));
 		printf("Size: %u\n", size);
 
 		transport input = {size, message};

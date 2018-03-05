@@ -80,7 +80,6 @@ int main(int argc, char *argv[])
 	char temp;
 	for(i = 0; i < 50; i++){
 		// These lines initialize everything to zero
-		len=0;
 		memset(len_buffer, 2, 0);
 		memset(&temp, 1, 0);
 		// This read is supposed to get the size of a line. If it gets nothing eof has been reached.
@@ -89,18 +88,18 @@ int main(int argc, char *argv[])
 			printf("Finished reading signatures.\n");
 	    	break;
 		}
+
 		signatures[i].size = atoi(len_buffer); //This is just the integer length of the
 		fread(&temp, 1, 1, ids_file);
 		if(temp != '|') ErrorOut("Error reading IDS file on expected pipe ('|') separator. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
-		signatures[i].message = (char *) calloc(len, 1);
-		fread(signatures[i].message, 1, len, ids_file);
-		printf("signatures[%d]: %s\n", i, signatures[i]);
-		if(fread(&temp, 1, 1, ids_file) == 0)
-		{
-			printf("Finished reading signatures.\n");
-			break;
-		}
-		if(temp != '\n') ErrorOut("Error reading IDS file on expected newline ('\\n'). Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+		
+		signatures[i].message = (char *) calloc(signatures[i].size, 1);
+		fread(signatures[i].message, 1, signatures[i].size, ids_file);
+		printf("signatures[%d]: %s\n", i, signatures[i].message);
+		
+		fread(&temp, 1, 1, ids_file);
+
+		if(temp != '\n' && temp != EOF) ErrorOut("Error reading IDS file on expected newline ('\\n'). Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
 	}
 
     // ENDING HERE
