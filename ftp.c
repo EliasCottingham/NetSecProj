@@ -9,8 +9,8 @@
 #include "utils.h"
 
 
-transport FTPExecute(uint32_t size, char *message, char *ftp_dir)
+transport FTPExecute(transport input, char *ftp_dir)
 {
-	transport response = {size, message};
+	transport response = {input.size, input.message};
 	return response;
 }

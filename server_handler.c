@@ -77,20 +77,30 @@ int main(int argc, char *argv[])
 	int i;
 	char temp;
 	for(i = 0; i < 50; i++){
-		printf("%d\n", i);
-		fread(len_buffer, 1, 2, ids_file);
+		len=0;
+		memset(len_buffer, 2, 0);
+		printf("Line: %d\n", i);
+		if(fread(len_buffer, 1, 2, ids_file) == 0)
+		{
+			printf("Breaking from len read");
+			break;
+		}
 		len = atoi(len_buffer);
+		printf("Length: %d ", len);
 		fread(&temp, 1, 1, ids_file);
+		printf("Temp 1: %c ", temp);
 		if(temp != '|') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
 		lines[i] = (char *) calloc(len, 1);
 		fread(lines[i], 1, len, ids_file);
+		printf("Line: %s ", lines[i]);
 		if(fread(&temp, 1, 1, ids_file) == 0)
 		{
-			printf("SHOULD BREAK");
+			printf("breaking from temp 2 read");
 			break;
 		}
+		printf("Temp 2: %c", temp);
 		if(temp != '\n') ErrorOut("Error reading IDS file. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
-		printf("%s\n", lines[i]);
+		// printf("%s\n", lines[i]);
 	}
 
     // ENDING HERE
@@ -104,6 +114,6 @@ int main(int argc, char *argv[])
 				ErrorOut("accept failed");
 			}
 
-    	IDSHandler(client_socket, ids_file, ftp_dir);
+    	IDSHandler(client_socket, lines, ftp_dir);
     }
 }
