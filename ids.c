@@ -55,7 +55,7 @@ void IDSHandler(int client_socket, char *ids_signatures[], char * ftp_dir)
 	{
 		printf("IN IDS RECEIVING LOOP\n");
 		recv(client_socket, size_buffer, sizeof(size_buffer), 0);
-		size = atoi(size_buffer);
+		size = (int)*size_buffer;
 		printf("Expected Size: %d\n", size);
 		size_holder = 0;
 		message = (char *) calloc(size, 1);

@@ -80,7 +80,7 @@ int main(int argc, char *argv[]){
         }
         stat(totalpath, &sb);
         // size_t size = htonl(sb.st_size);
-        size_t size = sb.st_size+1+strlen(fname);
+        size_t size = strlen(fname)+sb.st_size+1;
         send(sock, &size, sizeof(size), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
         send(sock, fname, len, 0);
@@ -113,8 +113,7 @@ int main(int argc, char *argv[]){
           free(fname);
           break;
         }
-        command = fname;
-        len = strlen(command)+1+strlen(fname);
+        len = strlen(fname)+1;
         send(sock, &len, sizeof(len), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
         send(sock, fname, len, 0);
