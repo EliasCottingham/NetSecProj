@@ -97,7 +97,7 @@ int main(int argc, char *argv[]){
         free(totalpath);
 
         recv_response(&sock, &response_buffer, &rec_len);
-        printf("%s\n", (response_buffer+1));
+        printf("Response in case: %s\n", (response_buffer+1));
         free(response_buffer);
         break;
 
@@ -145,16 +145,31 @@ int main(int argc, char *argv[]){
 
 void recv_response(int* sock, char** response_buffer, int* rec_len){
   /* Helper: Handles the response from server. */
-  int expect_len;
+  int size;
+  int size_holder = 0;
+  int exp_size;
   char len_buffer[sizeof(size_t)];
+  char buffer[CHUNK];
 
   printf("WAITING FOR RESPONSE:\n");
   recv(*sock, len_buffer, sizeof(len_buffer), 0);
-  expect_len = (int)*len_buffer;
-  printf("Expect Len: %d\n", expect_len);
-  *response_buffer = (char *) calloc(expect_len, 1);
-  *rec_len = recv(*sock, *response_buffer, expect_len, 0);
-  printf("Received: %s\n", *response_buffer);
+  *rec_len = (int)*len_buffer;
+  printf("Expect Len: %d\n", *rec_len);
+  *response_buffer = (char *) calloc(*rec_len, 1);
+  while(size_holder < *rec_len)
+  {
+    memset(buffer, 0, sizeof(buffer));
+    exp_size = ((size-size_holder) < CHUNK) ? (size-size_holder): CHUNK;
+    size = recv(*sock, buffer, exp_size, 0);
+    printf("Buff: %s\n",buffer+1);
+    if (size <= 0){
+      printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
+      break;
+    }
+    memcpy((*response_buffer+size_holder), buffer, size);
+    size_holder += size;
+  }
+  printf("Received: %s\n", *response_buffer+1);
   printf("Rec_len: %d\n", *rec_len);
 }
 
