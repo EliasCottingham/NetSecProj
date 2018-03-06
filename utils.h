@@ -3,9 +3,9 @@
 
 #define CHUNK 1500
 
-typedef struct 
+typedef struct
 {
-	size_t size;
+	int32_t size;
 	char *message;
 } transport;
 

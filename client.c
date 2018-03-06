@@ -64,6 +64,7 @@ int main(int argc, char *argv[]){
   len=0;
   int rec_len;
   char cmd_type;
+  int32_t size;
   while(1){
     printf("\n->");
     fflush(stdin);
@@ -81,9 +82,8 @@ int main(int argc, char *argv[]){
         stat(totalpath, &sb);
         // size_t size = htonl(sb.st_size);
         // Size here is the overall size of the message sent to the ids.  Of format <char type of command><string filename><EOF delimited file>
-        size_t size = 1+(strlen(fname)+1)+sb.st_size;
-        int32_t to_send = htonl(size);
-        send(sock, &to_send, sizeof(int32_t), 0);
+        size = htonl(1+(strlen(fname)+1)+sb.st_size);
+        send(sock, &size, sizeof(int32_t), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
         send(sock, fname, strlen(fname)+1, 0);
 
@@ -108,8 +108,8 @@ int main(int argc, char *argv[]){
           free(fname);
           break;
         }
-        len = strlen(fname)+1;
-        send(sock, &len, sizeof(len), 0);
+        size = htonl(strlen(fname)+1);
+        send(sock, &size, sizeof(int32_t), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
         send(sock, fname, len, 0);
         free(fname);
@@ -122,8 +122,8 @@ int main(int argc, char *argv[]){
       case(2):
         printf("LS cmd.\n");
         command = "ls";
-        len = strlen(command)+1;
-        send(sock, &len, sizeof(len), 0);
+        size = htonl(strlen(fname)+1);
+        send(sock, &size, sizeof(int32_t), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
 
         recv_response(&sock, &response_buffer, &rec_len);
@@ -145,16 +145,18 @@ int main(int argc, char *argv[]){
 
 
 void recv_response(int* sock, char** response_buffer, int* rec_len){
+  //TODO: Seriosuly fucked up.. not sure what to do as of now
   /* Helper: Handles the response from server. */
   int size;
   int size_holder = 0;
   int exp_size;
-  char len_buffer[sizeof(size_t)];
+  int32_t net_size;
+  char *len_buffer = (char *)&net_size;
   char buffer[CHUNK];
 
   printf("WAITING FOR RESPONSE:\n");
   recv(*sock, len_buffer, sizeof(len_buffer), 0);
-  *rec_len = (int)*len_buffer;
+  *rec_len = ntohl(net_size);
   printf("Expect Len: %d\n", *rec_len);
   *response_buffer = (char *) calloc(*rec_len, 1);
   while(size_holder < *rec_len)

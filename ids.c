@@ -56,8 +56,9 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir)
 
 	while(1)
 	{
+    //TODO: Seriosuly fucked up.. not sure what to do as of now
 		printf("IN IDS RECEIVING LOOP\n");
-		if(recv(client_socket, size_buffer, sizeof(size_t), 0) <= 0){
+		if(recv(client_socket, size_buffer, sizeof(int32_t), 0) <= 0){
 			printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
 			break;
 		}
@@ -96,7 +97,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir)
 		response = FTPExecute(input, ftp_dir);
 
 		printf("Message response strlen:%lu\n", strlen((response.message+1)));
-		printf("Message response size: %zu\n", response.size);
+		printf("Message response size: %d\n", response.size);
 		printf("Message response: %s\n", response.message);
 		printf("\n\n\n");
 
@@ -104,7 +105,8 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir)
 
 		size_holder = 0;
 		printf("SEND LOOP START:\n");
-		send(client_socket, &response.size, sizeof(response.size), 0);
+    net_size = htonl(response.size);
+		send(client_socket, &net_size, sizeof(int32_t), 0);
 		while(size_holder < response.size)
 		{
 			send_size = ((response.size-size_holder) < CHUNK) ? (response.size-size_holder): CHUNK;
