@@ -39,9 +39,12 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir)
 
 	char buffer[CHUNK];
 	memset(buffer, 0, sizeof(buffer));
-	char size_buffer[sizeof(size_t)];
-	memset(size_buffer, 0, sizeof(size_buffer));
-	uint32_t size;
+
+	int32_t net_size;
+	int32_t size;
+	// char size_buffer[sizeof(size_t)];
+	char *size_buffer = (char*)&net_size;
+	memset(size_buffer, 0, sizeof(int32_t));
 
 	char *message;
 
@@ -54,11 +57,13 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir)
 	while(1)
 	{
 		printf("IN IDS RECEIVING LOOP\n");
-		if(recv(client_socket, size_buffer, sizeof(size_buffer), 0) <= 0){
+		if(recv(client_socket, size_buffer, sizeof(size_t), 0) <= 0){
 			printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
 			break;
 		}
-		size = (int)*size_buffer;
+
+		// size = (uint32_t)*size_buffer;
+		size = ntohl(net_size);
 		printf("Expected Size: %d\n", size);
 		size_holder = 0;
 		message = (char *) calloc(size, 1);
@@ -70,7 +75,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir)
 			printf("expected_receive_size: %d size_holder: %d size: %d\n", expected_receive_size, size_holder, size);
 			actual_receive_size = recv(client_socket, buffer, expected_receive_size, 0);
 			printf("actual_receive_size: %d\n",actual_receive_size);
-      		printf("Recieved: %s\n", buffer);
+      		// printf("Recieved: %s\n", buffer);
 			if(actual_receive_size <= 0){
 				printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
 				goto break_from_receiving;

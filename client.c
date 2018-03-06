@@ -82,7 +82,8 @@ int main(int argc, char *argv[]){
         // size_t size = htonl(sb.st_size);
         // Size here is the overall size of the message sent to the ids.  Of format <char type of command><string filename><EOF delimited file>
         size_t size = 1+(strlen(fname)+1)+sb.st_size;
-        send(sock, &size, sizeof(size), 0);
+        int32_t to_send = htonl(size);
+        send(sock, &to_send, sizeof(int32_t), 0);
         send(sock, &cmd_type, sizeof(cmd_type), 0);
         send(sock, fname, strlen(fname)+1, 0);
 
