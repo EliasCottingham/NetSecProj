@@ -19,11 +19,14 @@ void recv_response(int* sock, char** response_buffer, int* rec_len);
 int main(int argc, char *argv[]){
   /*Client takes port number and ip as parameters.*/
   struct sockaddr_in server;
-  int sock, connection, len;
+  int sock, connection, len, rec_len;
+  int32_t size;
   char cmd[100], buff[CHUNK];
   char* path;
   char* fname;
   char* totalpath;
+  char* cmd_type;
+  char* response_buffer;
 
   if(argc != 4){
     printf("Wrong number of parameters.\nThe FTP client takes a port, ip, and the directory from which it reads and writes.\n");
@@ -58,12 +61,7 @@ int main(int argc, char *argv[]){
   }
 
   printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
-  char* response_buffer;
 
-  // len = 0;
-  int rec_len;
-  char* cmd_type;
-  int32_t size;
   while(1){
     printf("\n->");
     fflush(stdin);
@@ -146,7 +144,6 @@ int main(int argc, char *argv[]){
 
 
 void recv_response(int* sock, char** response_buffer, int* rec_len){
-  //TODO: Seriosuly fucked up.. not sure what to do as of now
   /* Helper: Handles the response from server. */
   int size;
   int size_holder = 0;
@@ -155,7 +152,6 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
   char buffer[CHUNK];
   char *len_buffer = (char *)&net_size;
   memset(len_buffer, 0, sizeof(int32_t));
-
 
   printf("WAITING FOR RESPONSE:\n");
   recv(*sock, len_buffer, sizeof(int32_t), 0);
