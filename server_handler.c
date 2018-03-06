@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 		}
     ids_file = fopen(ids_filename, "rb");
 
-		ids_logname = argv[3];
+		ids_logname = argv[4];
 		if (strchr(ids_logname, '/')){
 			free(ftp_dir);
 			free(ids_file);
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 
 
 	transport signatures[51];
-	memset(signatures, 51*sizeof(transport), 0);
+	memset(signatures, '\0',51*sizeof(transport) );
 	int i;
 	char temp;
 	for(i = 0; i < 50; i++){
@@ -103,18 +103,23 @@ int main(int argc, char *argv[])
 			printf("Finished reading signatures.\n");
 	    	break;
 		}
-
+		printf("len buffer: %s\n", len_buffer);
 		signatures[i].size = atoi(len_buffer); //This is just the integer length of the
 		fread(&temp, 1, 1, ids_file);
-		if(temp != '|') ErrorOut("Error reading IDS file on expected pipe ('|') separator. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+		if(temp != '|') ErrorOut("Error reading IDS file on expected pipe ('|') separator. Format per line should be xx|id|xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
 
 		signatures[i].message = (char *) calloc(signatures[i].size, 1);
 		fread(signatures[i].message, 1, signatures[i].size, ids_file);
 		printf("signatures[%d]: %s\n", i, signatures[i].message);
 
-		fread(&temp, 1, 1, ids_file);
 
-		if(temp != '\n' && temp != EOF) ErrorOut("Error reading IDS file on expected newline ('\\n'). Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+		fread(&temp, 1, 1, ids_file);
+		//even signatures are the patterns and odd ones are the ids
+		if((i %2)  ==1 ){
+			if(temp != '\n' && temp != EOF) ErrorOut("Error reading IDS file on expected newline ('\\n'). Format per line should be xx|id|xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+		} else {
+			if(temp != '|') ErrorOut("Error reading IDS file on expected pipe ('|') separator. Format per line should be xx|id|xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+		}
 	}
 
     // ENDING HERE
