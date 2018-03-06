@@ -35,16 +35,27 @@ void SendComplete(int socket, const void *msg, int len, int flags)
 char *ScanData(char *data, int length, transport signatures[])
 {
   char *delim ="|";
+  printf("Scandata: #%s# which is of length %d\n",data, strlen(data));
+  if(strlen(data) ==1){
+			printf("Early return\n");
+      return "";
+  }
 	//iterate through signatures checking if data matches signature
-	for(;signatures != NULL; signatures++){
+	for(;signatures != NULL; signatures){
+		printf("Signatures message: %s\n", signatures->message);
+		char sig_copy[signatures->size];
+		memcpy(sig_copy, signatures->message,signatures->size);
 		//get id and data
-		char *id = strtok(signatures->message, delim);
+		char *id = strtok(sig_copy, delim);
 		char *info = strtok(NULL,delim);
+		printf("ID: #%s# info: #%s#\n", id, info);
 		//use memmem incase of null bytes in message
 		if(memmem(data, length-1, info, signatures->size-strlen(id)) !=NULL){
+			printf("This signature matched: #%s# this piece of data: #%s#\n", info, data);
 			return id;
 		}
 	}
+	printf("Normal okay return\n");
   return "";
 }
 
@@ -83,7 +94,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 		printf("RECEIVE LOOP START:\n");
 		while(size_holder < size)
 		{
-			memset(buffer, '0', sizeof(buffer));
+			memset(buffer, 0, sizeof(buffer));
 			expected_receive_size = ((size-size_holder) < CHUNK) ? (size-size_holder): CHUNK;
 			printf("expected_receive_size: %d size_holder: %d size: %d\n", expected_receive_size, size_holder, size);
 			actual_receive_size = recv(client_socket, buffer, expected_receive_size, 0);
@@ -95,12 +106,16 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 			}
 			printf("Receive buffer content: %s\n", buffer);
 			char *scan_result =ScanData(buffer, actual_receive_size, ids_signatures);
-			if(strlen(scan_result) !=0)
+			printf("scan result: #%s# which is of length %d", scan_result, strlen(scan_result));
+			if(strlen(scan_result) ==0)
 			{
+				printf("Returned from first scandata no issue\n");
 				memcpy((message+size_holder), buffer, actual_receive_size);
 				size_holder += actual_receive_size;
 			} else {
+				printf("Scandata bad packet first\n");
 				FILE *ids_log = fopen(ids_logname, "a");
+
 				time_t t;
 				time(&t);
 				struct tm *tm = localtime(&t);
@@ -114,6 +129,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 				fclose(ids_log);
 				//TODO: Do something with bad packets
 			}
+
 		}
 		printf("\nRECEIVE LOOP END\nSize expected: %d, Size received: %d\n", size, size_holder);
 
@@ -129,11 +145,14 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 			send_size = ((response.size-size_holder) < CHUNK) ? (response.size-size_holder): CHUNK;
 			printf("Current packet size: %d\n", send_size);
 			char *scan_result =ScanData((response.message+size_holder), send_size, ids_signatures);
-			if(strlen(scan_result) !=0)
+			printf("scan result: #%s# which is of length %d", scan_result, strlen(scan_result));
+			if(strlen(scan_result) ==0)
 			{
+				printf("Second scandata no issue\n");
 				send(client_socket, (response.message+size_holder), send_size, 0);
 				size_holder += send_size;
 			} else {
+				printf("Second scandata bad\n");
 				FILE *ids_log = fopen(ids_logname, "a");
 				time_t t;
 				time(&t);
@@ -144,8 +163,11 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 				//log message format is: <id> <ip> <timestamp>\n
 				char message_to_write[strlen(scan_result) + 1 + strlen(ip) + 1 + strlen(time_buffer) +2];
 				sprintf("%s %s %d\n", scan_result, ip, time_buffer);
+				printf("Got to fwrite\n");
 				fwrite(message_to_write, sizeof(char), strlen(message_to_write)+1,ids_log);
+				printf("Passed fwrite\n");
 				fclose(ids_log);
+				printf("Passed fclose");
 				//TODO: Do something with bad packets
 
 			}
