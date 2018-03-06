@@ -97,6 +97,7 @@ int main(int argc, char *argv[]){
         free(totalpath);
 
         recv_response(&sock, &response_buffer, &rec_len);
+        printf("%s\n", (response_buffer+2));
         free(response_buffer);
         break;
 
@@ -113,6 +114,7 @@ int main(int argc, char *argv[]){
         free(fname);
 
         recv_response(&sock, &response_buffer, &rec_len);
+        printf("%s\n", (response_buffer+2));
         free(response_buffer);
         break;
 
@@ -124,6 +126,7 @@ int main(int argc, char *argv[]){
         send(sock, &cmd_type, sizeof(cmd_type), 0);
 
         recv_response(&sock, &response_buffer, &rec_len);
+        printf("%s\n", (response_buffer+2));
         free(response_buffer);
         break;
 
@@ -141,12 +144,13 @@ int main(int argc, char *argv[]){
 
 
 void recv_response(int* sock, char** response_buffer, int* rec_len){
+  /* Helper: Handles the response from server. */
   int expect_len;
   char len_buffer[sizeof(size_t)];
 
   printf("WAITING FOR RESPONSE:\n");
   recv(*sock, len_buffer, sizeof(len_buffer), 0);
-  expect_len = atoi(len_buffer);
+  expect_len = (int)*len_buffer;
   printf("Expect Len: %d\n", expect_len);
   *response_buffer = (char *) calloc(expect_len, 1);
   *rec_len = recv(*sock, *response_buffer, expect_len, 0);
@@ -155,6 +159,7 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
 }
 
 int get_fname(char* cmd, char** fname){
+  /* Helper: Gets the file name and makes sure it is not a directory */
   int len = strlen(cmd);
   *fname = calloc(len-5, sizeof(char));
   strncpy(*fname, cmd+4, len-5);
@@ -166,6 +171,8 @@ int get_fname(char* cmd, char** fname){
 }
 
 int get_path(char* path, char* fname, char** totalpath){
+  /* Helper: Gets the total path of the file and verifies that its a.) Not a Directory,
+  b.) it exists. */
   int len = strlen(path)+strlen(fname);
   *totalpath = malloc(len);
   strncpy(*totalpath, path, strlen(path));
@@ -179,6 +186,8 @@ int get_path(char* path, char* fname, char** totalpath){
 }
 
 int cmd_helper(char* cmd){
+  /* Helper: Gets command type, and returns coresponding int for switch
+   cases. */
   if (strncmp(cmd, "put ", 4)==0){
     return 0;
   }
