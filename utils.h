@@ -2,7 +2,7 @@
 #define TRANSPORT_FOR_IDS
 
 #define CHUNK 1500
-
+#define MAX_FILES 100
 typedef struct
 {
 	int32_t size;
@@ -13,6 +13,6 @@ void ErrorOut(char *msg);
 
 transport FTPExecute(transport input, char *ftp_dir);
 
-void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir);
+void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, char *ids_logname, char* ip);
 
 #endif

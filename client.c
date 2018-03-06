@@ -68,6 +68,7 @@ int main(int argc, char *argv[]){
     fgets(cmd, 100, stdin);
     switch(cmd_helper(cmd)){
       case(0):
+      //TODO: send hash
         printf("Put cmd.\n");
         cmd_type = "P ";
         if (get_fname(cmd, &fname)==-1){
@@ -132,7 +133,7 @@ int main(int argc, char *argv[]){
 
       case(3):
         printf("Exit cmd.\n");
-        free(path);
+        // free(path);
         exit(1);
       case(-1):
         printf("Error: Command not recognived.\n");

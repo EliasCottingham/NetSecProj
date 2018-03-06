@@ -6,6 +6,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <signal.h>
+#include <netinet/in.h>
 
 #include "utils.h"
 
@@ -13,7 +15,7 @@
 int main(int argc, char *argv[])
 {
 		if(signal(SIGPIPE, SIG_IGN) == SIG_ERR) ErrorOut("signal() failed");
-	  if(argc != 4) ErrorOut("Wrong number of parameters.\nYou must provide a port, the FTP directory, and then the IDS signature file.\n");
+	  if(argc != 5) ErrorOut("Wrong number of parameters.\nYou must provide a port, the FTP directory, the IDS signature file, and the IDS log file.\n");
 
     int server_socket;
     int client_socket;
@@ -26,6 +28,7 @@ int main(int argc, char *argv[])
     char *ftp_dir;
     char *ids_filename;
     FILE *ids_file;
+		char *ids_logname;
 
     if((server_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) ErrorOut("Socket creation failed");
 
@@ -71,6 +74,18 @@ int main(int argc, char *argv[])
 		}
     ids_file = fopen(ids_filename, "rb");
 
+		ids_logname = argv[3];
+		if (strchr(ids_logname, '/')){
+			free(ftp_dir);
+			free(ids_file);
+			ErrorOut("Error: File name cannot be a path or contian any '/'s. ");
+		}
+		if(!(stat(ids_logname, &sb) == 0 && !S_ISDIR(sb.st_mode))){
+			printf("Error: Directory provided [%s] does not exist.\n", ids_logname);
+			free(ftp_dir);
+			free(ids_file);
+			exit(1);
+		}
     char len_buffer[2];
 
 
@@ -92,11 +107,11 @@ int main(int argc, char *argv[])
 		signatures[i].size = atoi(len_buffer); //This is just the integer length of the
 		fread(&temp, 1, 1, ids_file);
 		if(temp != '|') ErrorOut("Error reading IDS file on expected pipe ('|') separator. Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
-		
+
 		signatures[i].message = (char *) calloc(signatures[i].size, 1);
 		fread(signatures[i].message, 1, signatures[i].size, ids_file);
 		printf("signatures[%d]: %s\n", i, signatures[i].message);
-		
+
 		fread(&temp, 1, 1, ids_file);
 
 		if(temp != '\n' && temp != EOF) ErrorOut("Error reading IDS file on expected newline ('\\n'). Format per line should be xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
@@ -111,6 +126,8 @@ int main(int argc, char *argv[])
 				free(ftp_dir);
 				ErrorOut("accept failed");
 			}
-    	IDSHandler(client_socket, signatures, ftp_dir);
+			//get the ip address for use with log
+			char *ip = inet_ntoa(client_addr.sin_addr);
+    	IDSHandler(client_socket, signatures, ftp_dir, ids_logname,ip);
     }
 }
