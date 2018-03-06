@@ -58,20 +58,20 @@ int main(int argc, char *argv[]){
   }
 
   printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
-  char* command;
   char* response_buffer;
 
-  len=0;
+  // len = 0;
   int rec_len;
-  char cmd_type;
+  char* cmd_type;
   int32_t size;
   while(1){
     printf("\n->");
     fflush(stdin);
     fgets(cmd, 100, stdin);
-    switch(cmd_type = cmd_helper(cmd)){
+    switch(cmd_helper(cmd)){
       case(0):
         printf("Put cmd.\n");
+        cmd_type = "P ";
         if (get_fname(cmd, &fname)==-1){
           free(fname);
           break;
@@ -82,9 +82,9 @@ int main(int argc, char *argv[]){
         stat(totalpath, &sb);
         // size_t size = htonl(sb.st_size);
         // Size here is the overall size of the message sent to the ids.  Of format <char type of command><string filename><EOF delimited file>
-        size = htonl(1+(strlen(fname)+1)+sb.st_size);
+        size = htonl(strlen(cmd_type)+(strlen(fname)+1)+sb.st_size);
         send(sock, &size, sizeof(int32_t), 0);
-        send(sock, &cmd_type, sizeof(cmd_type), 0);
+        send(sock, cmd_type, strlen(cmd_type), 0);
         send(sock, fname, strlen(fname)+1, 0);
 
         FILE *fp;
@@ -98,36 +98,37 @@ int main(int argc, char *argv[]){
         free(totalpath);
 
         recv_response(&sock, &response_buffer, &rec_len);
-        printf("Response in case: %s\n", (response_buffer+1));
+        printf("Response: %s\n", (response_buffer));
         free(response_buffer);
         break;
 
       case(1):
         printf("Get cmd.\n");
+        cmd_type = "G ";
         if (get_fname(cmd, &fname)==-1){
           free(fname);
           break;
         }
-        size = htonl(strlen(fname)+1);
+        size = htonl(strlen(cmd_type)+strlen(fname)+1);
         send(sock, &size, sizeof(int32_t), 0);
-        send(sock, &cmd_type, sizeof(cmd_type), 0);
-        send(sock, fname, len, 0);
+        send(sock, cmd_type, strlen(cmd_type), 0);
+        send(sock, fname, strlen(fname)+1, 0);
         free(fname);
 
         recv_response(&sock, &response_buffer, &rec_len);
-        printf("%s\n", (response_buffer+1));
+        printf("Response: %s\n", (response_buffer));
         free(response_buffer);
         break;
 
       case(2):
         printf("LS cmd.\n");
-        command = "ls";
-        size = htonl(strlen(fname)+1);
+        cmd_type = "L";
+        size = htonl(strlen(cmd_type));
         send(sock, &size, sizeof(int32_t), 0);
-        send(sock, &cmd_type, sizeof(cmd_type), 0);
+        send(sock, cmd_type, strlen(cmd_type), 0);
 
         recv_response(&sock, &response_buffer, &rec_len);
-        printf("%s\n", (response_buffer+1));
+        printf("Response: %s\n", (response_buffer));
         free(response_buffer);
         break;
 
@@ -151,30 +152,32 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
   int size_holder = 0;
   int exp_size;
   int32_t net_size;
-  char *len_buffer = (char *)&net_size;
   char buffer[CHUNK];
+  char *len_buffer = (char *)&net_size;
+  memset(len_buffer, 0, sizeof(int32_t));
+
 
   printf("WAITING FOR RESPONSE:\n");
-  recv(*sock, len_buffer, sizeof(len_buffer), 0);
+  recv(*sock, len_buffer, sizeof(int32_t), 0);
   *rec_len = ntohl(net_size);
-  printf("Expect Len: %d\n", *rec_len);
-  *response_buffer = (char *) calloc(*rec_len, 1);
+  *response_buffer = (char *) calloc(*rec_len, sizeof(char));
   while(size_holder < *rec_len)
   {
     memset(buffer, 0, sizeof(buffer));
-    exp_size = ((size-size_holder) < CHUNK) ? (size-size_holder): CHUNK;
+    exp_size = ((*rec_len-size_holder) < CHUNK) ? (*rec_len-size_holder): CHUNK;
     size = recv(*sock, buffer, exp_size, 0);
-    printf("Buff: %s\n",buffer+1);
     if (size <= 0){
-      printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
+      printf("READ 0 bytes trasmission ended.\n");
       break;
     }
     memcpy((*response_buffer+size_holder), buffer, size);
     size_holder += size;
   }
-  printf("Received: %s\n", *response_buffer+1);
-  printf("Rec_len: %d\n", *rec_len);
+  printf("Recieved a total length of: %d, which was written to 'response_buffer'\n", *rec_len);
 }
+
+
+
 
 int get_fname(char* cmd, char** fname){
   /* Helper: Gets the file name and makes sure it is not a directory */
