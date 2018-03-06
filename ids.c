@@ -54,7 +54,10 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir)
 	while(1)
 	{
 		printf("IN IDS RECEIVING LOOP\n");
-		recv(client_socket, size_buffer, sizeof(size_buffer), 0);
+		if(recv(client_socket, size_buffer, sizeof(size_buffer), 0) <= 0){
+			printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
+			break;
+		}
 		size = (int)*size_buffer;
 		printf("Expected Size: %d\n", size);
 		size_holder = 0;
@@ -101,7 +104,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir)
 		{
 			send_size = ((response.size-size_holder) < CHUNK) ? (response.size-size_holder): CHUNK;
 			printf("send_size: %d\n", send_size);
-			if(ScanData(response.message, send_size, ids_signatures))
+			if(ScanData((response.message+size_holder), send_size, ids_signatures))
 			{
 				// printf()
 				send(client_socket, (response.message+size_holder), send_size, 0);
