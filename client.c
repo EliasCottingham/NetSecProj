@@ -97,7 +97,7 @@ int main(int argc, char *argv[]){
         free(totalpath);
 
         recv_response(&sock, &response_buffer, &rec_len);
-        printf("%s\n", (response_buffer+2));
+        printf("%s\n", (response_buffer+1));
         free(response_buffer);
         break;
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]){
         free(fname);
 
         recv_response(&sock, &response_buffer, &rec_len);
-        printf("%s\n", (response_buffer+2));
+        printf("%s\n", (response_buffer+1));
         free(response_buffer);
         break;
 
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]){
         send(sock, &cmd_type, sizeof(cmd_type), 0);
 
         recv_response(&sock, &response_buffer, &rec_len);
-        printf("%s\n", (response_buffer+2));
+        printf("%s\n", (response_buffer+1));
         free(response_buffer);
         break;
 
