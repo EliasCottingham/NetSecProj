@@ -72,18 +72,20 @@ int main(int argc, char *argv[])
 			free(ftp_dir);
 			exit(1);
 		}
-    ids_file = fopen(ids_filename, "rb");
+    	
+    	ids_file = fopen(ids_filename, "rb");
 
 		ids_logname = argv[4];
 		if (strchr(ids_logname, '/')){
 			free(ftp_dir);
-			free(ids_file);
+			fclose(ids_file);
 			ErrorOut("Error: File name cannot be a path or contian any '/'s. ");
 		}
+
 		if(!(stat(ids_logname, &sb) == 0 && !S_ISDIR(sb.st_mode))){
 			printf("Error: Directory provided [%s] does not exist.\n", ids_logname);
 			free(ftp_dir);
-			free(ids_file);
+			fclose(ids_file);
 			exit(1);
 		}
     char len_buffer[2];
