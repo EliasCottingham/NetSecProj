@@ -53,12 +53,14 @@ int main(int argc, char *argv[]){
 
   len = strlen(argv[3]);
   if (argv[3][len-1] != '/'){
-    path = malloc(len+1);
+    path = (char *) calloc(len+2, sizeof(char));
     strncpy(path, argv[3], len);
     path[len] = '/';
   } else {
     path = argv[3];
   }
+
+  printf("Path: {%s}\n", path);
 
   printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
 
@@ -157,7 +159,7 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
   printf("WAITING FOR RESPONSE:\n");
   recv(*sock, len_buffer, sizeof(int32_t), 0);
   *rec_len = ntohl(net_size);
-  *response_buffer = (char *) calloc(*rec_len, sizeof(char));
+  *response_buffer = (char *) calloc(*rec_len + 1, sizeof(char));
   while(size_holder < *rec_len)
   {
     memset(buffer, 0, sizeof(buffer));
@@ -179,7 +181,7 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
 int get_fname(char* cmd, char** fname){
   /* Helper: Gets the file name and makes sure it is not a directory */
   int len = strlen(cmd);
-  *fname = calloc(len-5, sizeof(char));
+  *fname = calloc((len-5)+1, sizeof(char));
   strncpy(*fname, cmd+4, len-5);
   if (strchr(*fname, '/')){
     printf("Error: File name cannot be a path or contian any '/'s. ");
@@ -192,7 +194,7 @@ int get_path(char* path, char* fname, char** totalpath){
   /* Helper: Gets the total path of the file and verifies that its a.) Not a Directory,
   b.) it exists. */
   int len = strlen(path)+strlen(fname);
-  *totalpath = malloc(len);
+  *totalpath = (char *) calloc(len+1, sizeof(char));
   strncpy(*totalpath, path, strlen(path));
   strcat(*totalpath, fname);
   struct stat sb;
