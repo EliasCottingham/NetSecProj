@@ -98,14 +98,15 @@ transport FTPExecute(transport input, char *ftp_dir)
 				char filenames[255*MAX_FILES];
 				size_t nread;
 				size_t return_size = 0;
+
 				do{
 
-						nread= fread(filenames+nread, sizeof(char), CHUNK, ls_file);
+						nread= fread(filenames+return_size, sizeof(char), CHUNK, ls_file);
 						return_size += nread;
 					} while(nread == CHUNK);
-				response.size=nread+1;
-				response.message = malloc(nread) +1 ;
-				memcpy(response.message, filenames, nread);
+				response.size=return_size+1;
+				response.message = malloc(return_size) +1 ;
+				memcpy(response.message, filenames, return_size);
 			}
 		}
 		break;
