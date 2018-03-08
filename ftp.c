@@ -54,10 +54,27 @@ transport FTPExecute(transport input, char *ftp_dir)
 		break;
 		//put command
 		case 'P' : {
-			int file_size = input.size- strlen(input.message)-1;
+			// printf("Message: %s\n", input.message+ strlen(input.message)+1);
+			int file_size = input.size- strlen(input.message)-1- 64;
 			int file_name_size = strlen(ftp_dir) + strlen(input.message+2) +1;
 			char file_path[file_name_size];
 			sprintf(file_path, "%s%s",ftp_dir,input.message+2);
+			// Get filename of the hash
+			char hash_path[file_name_size+5];
+			sprintf(hash_path, "%s_hash",file_path);
+
+			// Get the hash
+			FILE *hash_file = fopen(hash_path, "w");
+			if(hash_file == NULL){
+				char *response_message = "Couldn't open file for writing on ftp server\n";
+				size_t message_size = strlen(response_message +1);
+				response.message = malloc(message_size);
+				strcpy(response.message, response_message);
+				response.size = message_size;
+			} else{
+				fwrite(input.message + strlen(input.message)+1, sizeof(char), 64, hash_file);
+				fclose(hash_file);
+			}
 			FILE *put_file = fopen(file_path, "w");
 			if(file_path == NULL){
 				char *response_message = "Couldn't open file for writing on ftp server\n";
@@ -70,7 +87,7 @@ transport FTPExecute(transport input, char *ftp_dir)
 				//read the message into the file
 				//sending the message 3 times plus junk in input.message so we need to use file size
 				for(nwrite =0; nwrite <file_size;
-					(nwrite+= fwrite(input.message+strlen(input.message)+1 +nwrite, sizeof(char), file_size, put_file)));
+					(nwrite+= fwrite(input.message+strlen(input.message)+1 + 64 +nwrite, sizeof(char), file_size, put_file)));
 				char *response_message = "Wrote file\n";
 				size_t message_size = strlen(response_message +1);
 				response.message = malloc(message_size);

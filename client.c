@@ -15,6 +15,7 @@ int cmd_helper(char* cmd);
 int get_fname(char* cmd, char** fname);
 int get_path(char* path, char* fname, char** totalpath, int check_exists);
 void recv_response(int* sock, char** response_buffer, int* rec_len);
+int get_fhash(char *fname, char** hash_fname);
 
 int main(int argc, char *argv[]){
   /*Client takes port number and ip as parameters.*/
@@ -24,6 +25,8 @@ int main(int argc, char *argv[]){
   char cmd[100], buff[CHUNK];
   char* path;
   char* fname;
+  char* fname_hash;
+  char* totalpath_hash;
   char* totalpath;
   char* cmd_type;
   char* response_buffer;
@@ -91,13 +94,34 @@ int main(int argc, char *argv[]){
           free(totalpath);
           break;
         }
+        //Verify hash file
+        if (get_fhash(fname, &fname_hash) ==-1) {
+          printf("Error: a file of <filename>_hash must exist when transmitting files");
+          free(fname_hash);
+          free(fname);
+          free(totalpath);
+          break;
+        } else if(get_path(path, fname_hash, &totalpath_hash, 1) == -1){
+          free(fname_hash);
+          free(fname);
+          free(totalpath);
+          free(totalpath_hash);
+          break;
+        }
+        // Read in the hash from the file
+        FILE *hash_file;
+        hash_file = fopen(totalpath_hash, "rb");
+        char hash_buff[65];
+        fread(hash_buff, 1, 64, hash_file);
+
         stat(totalpath, &sb);
         // size_t size = htonl(sb.st_size);
         // Size here is the overall size of the message sent to the ids.  Of format <char type of command><string filename><EOF delimited file>
-        size = htonl(strlen(cmd_type)+(strlen(fname)+1)+sb.st_size);
+        size = htonl(strlen(cmd_type)+(strlen(fname)+1)+sb.st_size + 64);
         send(sock, &size, sizeof(int32_t), 0);
         send(sock, cmd_type, strlen(cmd_type), 0);
         send(sock, fname, strlen(fname)+1, 0);
+        send(sock, hash_buff, 64, 0);
 
         FILE *fp;
         fp = fopen(totalpath, "rb");
@@ -212,6 +236,19 @@ int get_fname(char* cmd, char** fname){
   strncpy(*fname, cmd+4, len-5);
   if (strchr(*fname, '/')){
     printf("Error: File name cannot be a path or contain any '/'s. ");
+    return -1;
+  }
+  return 1;
+}
+
+// Assume hash files are stored in <filename>_hash
+int get_fhash(char *fname, char** hash_fname){
+  int len =strlen(fname);
+  *hash_fname = calloc((len+5)+1, sizeof(char));
+  strncpy(*hash_fname, fname, len);
+  strncat(*hash_fname, "_hash", 5);
+  if (strchr(*hash_fname, '/')){
+    printf("Error: File name cannot be a path or contain any '/'s.\n ");
     return -1;
   }
   return 1;
