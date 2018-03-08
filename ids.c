@@ -95,7 +95,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 	memset(size_buffer, 0, sizeof(int32_t));
 
 
-
+	int test_holder;
 	while(1)
 	{
 		printf("IN IDS RECEIVING LOOP\n");
@@ -142,6 +142,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 				fclose(ids_log);
 				free(scan_result);
 				//TODO: Do something with bad packets
+				size -= actual_receive_size;
 			}
 
 		}
@@ -149,17 +150,20 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 
 		transport input = {size, message};
 		response = FTPExecute(input, ftp_dir);
-
 		size_holder = 0;
 		printf("SEND LOOP START:\n");
-    net_size = htonl(response.size);
+    	net_size = htonl(response.size);
 		send(client_socket, &net_size, sizeof(int32_t), 0);
 		while(size_holder < response.size)
 		{
+
+			printf("response.size: %d size_holder: %d\n", response.size, size_holder);
 			send_size = ((response.size-size_holder) < CHUNK) ? (response.size-size_holder): CHUNK;
 			printf("Current packet size: %d\n", send_size);
 			char *scan_result =ScanData((response.message+size_holder), send_size, ids_signatures);
-			if(strlen(scan_result) ==0)
+			printf("Scan result: [%s] %d\n", scan_result, response.size);
+
+			if(strlen(scan_result) == 0)
 			{
 				send(client_socket, (response.message+size_holder), send_size, 0);
 				size_holder += send_size;
@@ -169,15 +173,15 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 				time(&t);
 				struct tm *tm = localtime(&t);
 				char time_buffer[80];
-				strftime(buffer, 80, "%c", tm);
+				strftime(time_buffer, 80, "%c", tm);
 
 				//log message format is: <id> <ip> <timestamp>\n
 				char message_to_write[strlen(scan_result) + 1 + strlen(ip) + 1 + strlen(time_buffer) +2];
-				sprintf("%s %s %d\n", scan_result, ip, time_buffer);
+				sprintf(message_to_write, "%s %s %d\n", scan_result, ip, time_buffer);
 				fwrite(message_to_write, sizeof(char), strlen(message_to_write)+1,ids_log);
 				fclose(ids_log);
 				//TODO: Do something with bad packets
-
+				size_holder += send_size;
 			}
 		}
     printf("Message sent!\n\n");
