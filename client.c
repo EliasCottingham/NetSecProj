@@ -13,7 +13,7 @@
 
 int cmd_helper(char* cmd);
 int get_fname(char* cmd, char** fname);
-int get_path(char* path, char* fname, char** totalpath);
+int get_path(char* path, char* fname, char** totalpath, int check_exists);
 void recv_response(int* sock, char** response_buffer, int* rec_len);
 
 int main(int argc, char *argv[]){
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]){
         if (get_fname(cmd, &fname)==-1){
           free(fname);
           break;
-        } else if (get_path(path, fname, &totalpath)==-1){
+        } else if (get_path(path, fname, &totalpath, 1)==-1){
           free(totalpath);
           break;
         }
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]){
         send(sock, fname, strlen(fname)+1, 0);
 
         FILE *fp;
-        fp = fopen(totalpath, "r");
+        fp = fopen(totalpath, "rb");
         size_t nread;
         while((nread = fread(buff, 1, CHUNK, fp)) > 0){
           send(sock, buff, nread, 0);
@@ -109,6 +109,9 @@ int main(int argc, char *argv[]){
         if (get_fname(cmd, &fname)==-1){
           free(fname);
           break;
+        } else if(get_path(path, fname, &totalpath, 0) == -1){
+          free(totalpath);
+          break;
         }
         size = htonl(strlen(cmd_type)+strlen(fname)+1);
         send(sock, &size, sizeof(int32_t), 0);
@@ -117,6 +120,14 @@ int main(int argc, char *argv[]){
         free(fname);
 
         recv_response(&sock, &response_buffer, &rec_len);
+
+        FILE *out_file;
+        out_file = fopen(totalpath, "wb");
+        // fwrite(response_buffer, 1, rec_len, out_file);
+        size_t nwrite;
+        for(nwrite =0; nwrite <rec_len;
+          (nwrite+= fwrite(response_buffer+nwrite, sizeof(char), rec_len, out_file)));
+        fclose(out_file);
         printf("Response: %s\n", (response_buffer));
         free(response_buffer);
         break;
@@ -189,23 +200,25 @@ int get_fname(char* cmd, char** fname){
   *fname = calloc((len-5)+1, sizeof(char));
   strncpy(*fname, cmd+4, len-5);
   if (strchr(*fname, '/')){
-    printf("Error: File name cannot be a path or contian any '/'s. ");
+    printf("Error: File name cannot be a path or contain any '/'s. ");
     return -1;
   }
   return 1;
 }
 
-int get_path(char* path, char* fname, char** totalpath){
+int get_path(char* path, char* fname, char** totalpath, int check_exists){
   /* Helper: Gets the total path of the file and verifies that its a.) Not a Directory,
   b.) it exists. */
   int len = strlen(path)+strlen(fname);
   *totalpath = (char *) calloc(len+1, sizeof(char));
   strncpy(*totalpath, path, strlen(path));
   strcat(*totalpath, fname);
-  struct stat sb;
-  if (!(stat(*totalpath, &sb) == 0 && !S_ISDIR(sb.st_mode))){
-    printf("Error: File provided [%s] is not located with in the current working directory [%s].\n", fname, path);
-    return -1;
+  if(check_exists){
+    struct stat sb;
+    if (!(stat(*totalpath, &sb) == 0 && !S_ISDIR(sb.st_mode))){
+      printf("Error: File provided [%s] is not located with in the current working directory [%s].\n", fname, path);
+      return -1;
+    }
   }
   return 1;
 }
