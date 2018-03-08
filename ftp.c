@@ -110,6 +110,11 @@ transport FTPExecute(transport input, char *ftp_dir)
 			}
 		}
 		break;
+		//exit command
+		case 'E': {
+			printf("Exit command received from client, exiting.\n");
+			exit(1);
+		}
 	}
 	return response;
 }

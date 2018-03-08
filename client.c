@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <arpa/inet.h>
 
-#define CHUNK 1500
+#define CHUNK 1400
 
 int cmd_helper(char* cmd);
 int get_fname(char* cmd, char** fname);
@@ -135,10 +135,14 @@ int main(int argc, char *argv[]){
 
       case(3):
         printf("Exit cmd.\n");
+        cmd_type = "E";
+        size = htonl(strlen(cmd_type));
+        send(sock, &size, sizeof(int32_t), 0);
+        send(sock, cmd_type, strlen(cmd_type), 0);
         // free(path);
         exit(1);
       case(-1):
-        printf("Error: Command not recognived.\n");
+        printf("Error: Command not recognized.\n");
         printf("Accepted commands are: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
         break;
     }
@@ -167,6 +171,7 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
     size = recv(*sock, buffer, exp_size, 0);
     if (size <= 0){
       printf("READ 0 bytes trasmission ended.\n");
+      // Shouldn't this error out? -msc
       break;
     }
     memcpy((*response_buffer+size_holder), buffer, size);
