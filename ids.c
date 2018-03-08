@@ -12,26 +12,6 @@
 #include "utils.h"
 
 
-
-void SendComplete(int socket, const void *msg, int len, int flags)
-{
-  //TODO: this is never used. Whats it for?
-	int sent = 0;
-	int sum_sent = 0;
-	char *message = (char *) msg;
-	while((sent = send(socket, message, len, flags)) < len)
-	{
-		if(sent == -1)
-			ErrorOut("Error on communication with ftp server 1");
-
-		sum_sent += sent;
-		message = ((char *) msg) + sum_sent;
-		len-=sent;
-	}
-	if(sent == -1)
-		ErrorOut("Error on communication with ftp server 1");
-}
-
 char *ScanData(char *data, int length, transport signatures[])
 {
   char *delim ="|";
