@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
     char len_buffer[2];
 
 
-	transport signatures[51];
-	memset(signatures, '\0',51*sizeof(transport) );
+	transport signatures[101];
+	memset(signatures, '\0',101*sizeof(transport) );
 	int i;
 	char temp;
 	for(i = 0; i < 50; i++){
@@ -136,5 +136,6 @@ int main(int argc, char *argv[])
 			//get the ip address for use with log
 			char *ip = inet_ntoa(client_addr.sin_addr);
     	IDSHandler(client_socket, signatures, ftp_dir, ids_logname,ip);
+    	close(client_socket);
     }
 }
