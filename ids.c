@@ -161,37 +161,50 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 		send_buffer = (char *) calloc(response.size, sizeof(char));
 
 		int original_pos;
-		int send_buffer_pos;
+		int send_buffer_pos = 0;
+		// int final_length;
 		for(original_pos = 0; original_pos < response.size; original_pos+=CHUNK)
 		{
-			char *scan_result =ScanData((response.message+size_holder), send_size, ids_signatures);
-		}
-
-
-
-		size_holder = 0;
-		printf("SEND LOOP START:\n");
-    	net_size = htonl(response.size);
-		send(client_socket, &net_size, sizeof(int32_t), 0);
-		while(size_holder < response.size)
-		{
-
-			printf("response.size: %d size_holder: %d\n", response.size, size_holder);
-			send_size = ((response.size-size_holder) < CHUNK) ? (response.size-size_holder): CHUNK;
-			printf("Current packet size: %d\n", send_size);
-			char *scan_result =ScanData((response.message+size_holder), send_size, ids_signatures);
-			printf("Scan result: [%s] %d\n", scan_result, response.size);
-
+			send_size = ((response.size-original_pos) < CHUNK) ? (response.size-original_pos): CHUNK;
+			char *scan_result = ScanData((response.message+size_holder), send_size, ids_signatures);
 			if(strlen(scan_result) == 0)
 			{
-				send(client_socket, (response.message+size_holder), send_size, 0);
-				size_holder += send_size;
+				memcpy((send_buffer + send_buffer_pos), (response.message+original_pos), send_size);
+				send_buffer_pos += send_size;
 			} else {
-				//TODO: Do something with bad packets
 				WriteToLog(ids_logname, scan_result, ip);
-				size_holder += send_size;
 			}
 		}
+
+		net_size = htonl(send_buffer_pos);
+		send(client_socket, &net_size, sizeof(int32_t), 0);
+		send(client_socket, send_buffer, send_buffer_pos, 0);
+
+
+
+		// size_holder = 0;
+		// printf("SEND LOOP START:\n");
+  //   	net_size = htonl(response.size);
+		// send(client_socket, &net_size, sizeof(int32_t), 0);
+		// while(size_holder < response.size)
+		// {
+
+		// 	printf("response.size: %d size_holder: %d\n", response.size, size_holder);
+		// 	send_size = ((response.size-size_holder) < CHUNK) ? (response.size-size_holder): CHUNK;
+		// 	printf("Current packet size: %d\n", send_size);
+		// 	char *scan_result =ScanData((response.message+size_holder), send_size, ids_signatures);
+		// 	printf("Scan result: [%s] %d\n", scan_result, response.size);
+
+		// 	if(strlen(scan_result) == 0)
+		// 	{
+		// 		send(client_socket, (response.message+size_holder), send_size, 0);
+		// 		size_holder += send_size;
+		// 	} else {
+		// 		//TODO: Do something with bad packets
+		// 		WriteToLog(ids_logname, scan_result, ip);
+		// 		size_holder += send_size;
+		// 	}
+		// }
     printf("Message sent!\n\n");
 		free(message);
 		// }
