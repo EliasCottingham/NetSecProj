@@ -76,6 +76,22 @@ char *ScanData(char *data, int length, transport signatures[])
   return "";
 }
 
+void WriteToLog(char *ids_logname, char *id, char*ip)
+{
+	FILE *ids_log = fopen(ids_logname, "a");
+	time_t t;
+	time(&t);
+	struct tm *tm = localtime(&t);
+	char time_buffer[80];
+	strftime(time_buffer, 80, "%c", tm);
+
+	//log message format is: <id> <ip> <timestamp>\n
+	char message_to_write[strlen(id) + 1 + strlen(ip) + 1 + sizeof(time_buffer) +2];
+	sprintf(message_to_write,"%s %s %s\n", id, ip, time_buffer);
+	fwrite(message_to_write, sizeof(char), strlen(message_to_write)+1,ids_log);
+	fclose(ids_log);
+}
+
 void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, char * ids_logname,char *ip)
 {
 	int actual_receive_size;
@@ -84,6 +100,8 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 	int size_holder;
   int32_t net_size;
   int32_t size;
+
+  char *send_buffer;
 
   transport response;
   char *message;
@@ -128,18 +146,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 				memcpy((message+size_holder), buffer, actual_receive_size);
 				size_holder += actual_receive_size;
 			} else {
-				FILE *ids_log = fopen(ids_logname, "a");
-				time_t t;
-				time(&t);
-				struct tm *tm = localtime(&t);
-				char time_buffer[80];
-				strftime(time_buffer, 80, "%c", tm);
-
-				//log message format is: <id> <ip> <timestamp>\n
-				char message_to_write[strlen(scan_result) + 1 + strlen(ip) + 1 + sizeof(time_buffer) +2];
-				sprintf(message_to_write,"%s %s %s\n", scan_result, ip, time_buffer);
-				fwrite(message_to_write, sizeof(char), strlen(message_to_write)+1,ids_log);
-				fclose(ids_log);
+				WriteToLog(ids_logname, scan_result, ip);
 				free(scan_result);
 				//TODO: Do something with bad packets
 				size -= actual_receive_size;
@@ -150,6 +157,18 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 
 		transport input = {size, message};
 		response = FTPExecute(input, ftp_dir);
+		
+		send_buffer = (char *) calloc(response.size, sizeof(char));
+
+		int original_pos;
+		int send_buffer_pos;
+		for(original_pos = 0; original_pos < response.size; original_pos+=CHUNK)
+		{
+			char *scan_result =ScanData((response.message+size_holder), send_size, ids_signatures);
+		}
+
+
+
 		size_holder = 0;
 		printf("SEND LOOP START:\n");
     	net_size = htonl(response.size);
@@ -168,19 +187,8 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 				send(client_socket, (response.message+size_holder), send_size, 0);
 				size_holder += send_size;
 			} else {
-				FILE *ids_log = fopen(ids_logname, "a");
-				time_t t;
-				time(&t);
-				struct tm *tm = localtime(&t);
-				char time_buffer[80];
-				strftime(time_buffer, 80, "%c", tm);
-
-				//log message format is: <id> <ip> <timestamp>\n
-				char message_to_write[strlen(scan_result) + 1 + strlen(ip) + 1 + strlen(time_buffer) +2];
-				sprintf(message_to_write, "%s %s %d\n", scan_result, ip, time_buffer);
-				fwrite(message_to_write, sizeof(char), strlen(message_to_write)+1,ids_log);
-				fclose(ids_log);
 				//TODO: Do something with bad packets
+				WriteToLog(ids_logname, scan_result, ip);
 				size_holder += send_size;
 			}
 		}
