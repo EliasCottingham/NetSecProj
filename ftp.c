@@ -115,6 +115,12 @@ transport FTPExecute(transport input, char *ftp_dir)
 			printf("Exit command received from client, exiting.\n");
 			exit(1);
 		}
+		break;
+		default: {
+			printf("Invalid command received from client.\n");
+			response.message = "Invalid command received.";
+			response.size = strlen(response.message+1);
+		}
 	}
 	return response;
 }

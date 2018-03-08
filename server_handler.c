@@ -14,6 +14,8 @@
 
 int main(int argc, char *argv[])
 {
+	// Part 1: Input processing and error handling.
+
 		if(signal(SIGPIPE, SIG_IGN) == SIG_ERR) ErrorOut("signal() failed");
 	  if(argc != 5) ErrorOut("Wrong number of parameters.\nYou must provide a port, the FTP directory, the IDS signature file, and the IDS log file.\n");
 
@@ -33,7 +35,11 @@ int main(int argc, char *argv[])
     if((server_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) ErrorOut("Socket creation failed");
 
     // MAKE SURE TO ADD INPUT HANDLING HERE
-    server_port = atoi(argv[1]);
+    	server_port = atoi(argv[1]);
+    	if(server_port < 1)
+    	{
+    		ErrorOut("Port number invalid");
+    	}
 
 		memset(&server_addr, 0, sizeof(server_addr));
 		server_addr.sin_family = AF_INET;
@@ -97,8 +103,8 @@ int main(int argc, char *argv[])
 	char temp;
 	for(i = 0; i < 50; i++){
 		// These lines initialize everything to zero
-		memset(len_buffer, 2, 0);
-		memset(&temp, 1, 0);
+		memset(len_buffer, 0, 2);
+		memset(&temp, 0, 1);
 		// This read is supposed to get the size of a line. If it gets nothing eof has been reached.
 		if(fread(len_buffer, 1, 2, ids_file) == 0)
 		{
@@ -120,7 +126,7 @@ int main(int argc, char *argv[])
 		if((i %2)  ==1 ){
 			if(temp != '\n' && temp != EOF) ErrorOut("Error reading IDS file on expected newline ('\\n'). Format per line should be xx|id|xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
 		} else {
-			if(temp != '|') ErrorOut("Error reading IDS file on expected pipe ('|') separator. Format per line should be xx|id|xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
+			if(temp != '|') ErrorOut("Error reading IDS file on expected pipe ('|') separator. Format per line should be xx|id|xx|<pattern>\n where xx is two bytes for an integer representing length of the subsequent object, <id> is the id, and <pattern> is the pattern");
 		}
 	}
 

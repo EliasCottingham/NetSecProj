@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <arpa/inet.h>
 
-#define CHUNK 1400
+#define CHUNK 1440
 
 int cmd_helper(char* cmd);
 int get_fname(char* cmd, char** fname);
@@ -34,12 +34,23 @@ int main(int argc, char *argv[]){
   }
 
   if((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1){
-    printf("Socket creation failed.");
+    printf("Socket creation failed.\n");
     exit(1);
   }
   server.sin_family = AF_INET;
-  server.sin_port = htons(atoi(argv[1]));
+  int port_var = atoi(argv[1]);
+  if(port_var < 1)
+  {
+    printf("Port number invalid.\n");
+    exit(1);
+  }
+  server.sin_port = htons(port_var);
   server.sin_addr.s_addr = inet_addr(argv[2]);
+  if(server.sin_addr.s_addr == -1 && strcmp(argv[2], "255.255.255.255") != 0)
+  {
+    printf("IP invalid, must be valid IPv4 address in byte dot notation.\n");
+    exit(1);
+  }
   if((connection = connect(sock,(struct sockaddr*)&server, sizeof(server))) == -1){
     printf("Connection failed.\n");
     exit(1);
@@ -60,7 +71,7 @@ int main(int argc, char *argv[]){
     path = argv[3];
   }
 
-  printf("Path: {%s}\n", path);
+  printf("Client Path: {%s}\n", path);
 
   printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
 

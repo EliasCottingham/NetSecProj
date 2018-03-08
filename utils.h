@@ -1,7 +1,7 @@
 #ifndef TRANSPORT_FOR_IDS
 #define TRANSPORT_FOR_IDS
 
-#define CHUNK 1500
+#define CHUNK 1440
 #define MAX_FILES 100
 typedef struct
 {
