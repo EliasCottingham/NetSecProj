@@ -1,8 +1,12 @@
 # NetSecProj
 
-Michael Chess
-Elias Cottingham
-Sammy Tbeile
+Michael Chess [MSC2209]
+Elias Cottingham [EBC2133]
+Sammy Tbeile [ST2918]
+Group 1
+
+COMS 4180 Network Security
+Group Project Part 1
 
 
 NOTE: CHUNK should be 1440 for accurate approximation of MTU of ethernet.  This is because the MTU for ethernet is 1518 less the ethernet header is 1500 less the TCP header is minimum 1440 (TCP header is variable).
@@ -33,16 +37,16 @@ Usage:
 Project structure:
 
 Server-side:
-	The server side is divided into 5 files with 3 main code files, one error function, and one header file. At a high level, server_handler.c contains code to set up a listening port on the machine and to wait for connections, passing them to the ids in a function call and handling sequential connections if need be.  It also handles input checking and parsing of the ids_signatures file.  The ids.c file contains functions relating to the operation of the ids. That is it contains a primary ids function that handles receiving and sending to the client.  This during the receiving and sending portions of this function the function scan data is called on successive blocks of input.  ScanData pattern matches the block with the ids signatures.  After read completes whatever wasn't dropped and logged by the ids is placed in a buffer and passed to the ftp part of the application.  The ftp.c file contains this part.  While transfer between the two occurs via a function call passing a complete message buffer (less dropped packets) the ids itself checks data in increments of CHUNK which is defined in the header file (used to aproximate the MTU of a regular network in accordance with piazza post cid=53). The ftp.c file itself contains a primary. The primary function contains the logic to choose which command was sent.
+	The server side is divided into 5 files with 3 main code files, one error function, and one header file. At a high level, server_handler.c contains code to set up a listening port on the machine and to wait for connections, passing them to the ids in a function call and handling sequential connections if need be.  It also handles input checking and parsing of the ids_signatures file.  The ids.c file contains functions relating to the operation of the ids. That is it contains a primary ids function that handles receiving and sending to the client.  This during the receiving and sending portions of this function the function scan data is called on successive blocks of input.  ScanData pattern matches the block with the ids signatures.  After read completes whatever wasn't dropped and logged by the ids is placed in a buffer and passed to the ftp part of the application.  The ftp.c file contains this part.  While transfer between the two occurs via a function call passing a complete message buffer (less dropped packets) the ids itself checks data in increments of CHUNK which is defined in the header file (used to approximate the MTU of a regular network in accordance with piazza post cid=53). The ftp.c file itself contains a primary. The primary function contains the logic to choose which command was sent.
 
 Client to FTP server message structure:
-	Network-format 32 bit integer representing total size followed by a char containing 'G', 'P', 'L', or 'E' followed by a space character representing get, put, ls, and exit commands respecively.  This is followed immediately by the content of the message.  For a get command the content is the filename. For a put command the content is a string representing the file name (must be in string format) followed immediately by the content of the file.  For ls and exit there is no more content after the command.
+	Network-format 32 bit integer representing total size followed by a char containing 'G', 'P', 'L', or 'E' followed by a space character representing get, put, ls, and exit commands respectively.  This is followed immediately by the content of the message.  For a get command the content is the filename. For a put command the content is a string representing the file name (must be in string format) followed immediately by the content of the file.  For ls and exit there is no more content after the command.
 
 FTP server to client message structure:
 	Network-format 32 bit integer representing total size followed by byte string containing content of the response. For a get this is either the file content or a message reading "Couldn't open the file". For a put this is a response either confirming writing the file or reporting failure to write file. For ls it is the content of the ls command executed by the server. There is no response for an exit.
 utils.h
-	typedef struct transport: 
-		This struct contains a size and message and is used for containing data byte strings that do not have a defined end marker. Input and output handling have to be able to accomodate arbitrary byte strings so a constant end marker is unfeasable. Additionally when parsing the names and patterns for the ids we have to again be able to handle arbitrary byte strings.
+	typedef struct transport:
+		This struct contains a size and message and is used for containing data byte strings that do not have a defined end marker. Input and output handling have to be able to accommodate arbitrary byte strings so a constant end marker is unfeasible. Additionally when parsing the names and patterns for the ids we have to again be able to handle arbitrary byte strings.
 	ErrorOut: Function to print and exit on error.
 	FTPExecute: Primary function of FTP server (ftp.c).
 	IDSHandler: Primary function of IDS (ids.c).
@@ -50,14 +54,14 @@ utils.h
 server_handler.c
 
 ids.c
-	void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, char * ids_logname,char *ip):
+	void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, char * ids_logname, char *ip):
 		Function Intent:
 			This function contains an logic for handling a connection and filtering data using functions below.
 		Function Structure:
-			Commands are handled in a synchronous fashion, that is a command is received and a response is sent before the next command is processed, the client is expected to do the same. The main body of the function uses an outer loop where each cycle should occur with one command input and output. This loop continues until the client dies or submits the exit command. Within this loop there are two other sections containing loops.  The first, the Input Section, contains a while loop that receives blocks of information from the socket at the maximum size defined by CHUNK, checks whether they contain any disallowed patterns and places the allowed ones into a buffer.  Disallowed packets are logged.  This buffer along with a maintained size over allowed packets are passed in a transport to the FTP server via a call to FTPExecute.  FTPExecute returns a transport that contains its response and a size. This is handled by the output loop. Since the buffer is present initially and the size the client is sent has to match up with the size the client receives we utilize a for loop over the FTP's returned buffer.  This for loop parses the message in blocks of maximum CHUNK and uses ScanData to check them for patterns.  Those that have no matches are passed into another buffer for sending to the client. Those that are disallowed are logged and ignored (ie not coppied to the output buffer).
+			Commands are handled in a synchronous fashion, that is a command is received and a response is sent before the next command is processed, the client is expected to do the same. The main body of the function uses an outer loop where each cycle should occur with one command input and output. This loop continues until the client dies or submits the exit command. Within this loop there are two other sections containing loops.  The first, the Input Section, contains a while loop that receives blocks of information from the socket at the maximum size defined by CHUNK, checks whether they contain any disallowed patterns and places the allowed ones into a buffer.  Disallowed packets are logged.  This buffer along with a maintained size over allowed packets are passed in a transport to the FTP server via a call to FTPExecute.  FTPExecute returns a transport that contains its response and a size. This is handled by the output loop. Since the buffer is present initially and the size the client is sent has to match up with the size the client receives we utilize a for loop over the FTP's returned buffer.  This for loop parses the message in blocks of maximum CHUNK and uses ScanData to check them for patterns.  Those that have no matches are passed into another buffer for sending to the client. Those that are disallowed are logged and ignored (ie not copied to the output buffer).
 		Params:
 			int client_socket: int representing the socket to operate on.
-			transport ids_signatures[]: 
+			transport ids_signatures[]:
 				array of transport objects. Even transports contain ids and odd transports contain patterns. Each id-pattern pair is stored adjacently in (0-1), (1-2) and so on.
 			char *ftp_dir: this variable is a pointer to a string containing the user inputted directory for the ftp server to use. Can be relative or absolute.!!!!!!!!!!!!!!!!!! is this true.
 			char *ids_logname: File that the ids should use to write logs to. Must be local.
@@ -70,7 +74,7 @@ ids.c
 		Params:
 			char *data: bytestring containing data to be scanned.
 			int length: length of said data.
-			transport signatures[]: array of signatures in the above described formatted used to do pattern matching.  Note pattern matching is done using gnu stnadard function memmem which works like strstr but without the string formatting requirments.
+			transport signatures[]: array of signatures in the above described formatted used to do pattern matching.  Note pattern matching is done using gnu standard function memmem which works like strstr but without the string formatting requirements.
 	void WriteToLog(char *ids_logname, char *id, char*ip):
 		Function Intent:
 			This function is intended to carry out logging for the ids.  It takes a log filename an id and an ip and writes a log line containing the id, the ip, and a timestamp.
@@ -123,7 +127,7 @@ client.c
 		Function Intent:
 			A function to read the first portion of a message and return an integer for use in a switch statement for the different commands.
 		Function Structure:
-			A series of if statments using strncmp map between the input command cmd and the returned integer.
+			A series of if statements using strncmp map between the input command cmd and the returned integer.
 		Returns:
 			An integer from -1 to 4 representing the command.
 			0=put
@@ -133,7 +137,7 @@ client.c
 			-1=other/unrecognized
 		Params:
 			char *cmd: a string to be compared as a command label.
-		
+
 	int get_fname(char* cmd, char** fname):
 		Function Intent:
 			given a command and a filename string pointer pointer. This function is used to check if the string given in command is not a directory. Also puts it into a fname string.
@@ -149,14 +153,14 @@ client.c
 		Function Structure:
 			A series of strncpys to move data into the totalpath variable and then use of stat and S_ISDIR to validate complete filepath.
 		Returns:
-			-1 on invalid fileapath
+			-1 on invalid filepath
 			1 otherwise
 		Params:
 			char *path: path string.
 			char *fname: filename string.
 			char **totalpath: the concatenated totalpath (path and filename) of the file.
 			int check_exists: int (used as boolean) to enable validation.  Validation is not needed in the case of concatenation for gets as the fname has been previously validated in get_fname.
-		
+
 	void recv_response(int* sock, char** response_buffer, int* rec_len):
 		Function Intent:
 			A function wrapper for response waiting and reception after sending a command.
@@ -166,4 +170,3 @@ client.c
 			int *sock: integer representing socket to communicate on
 			char **response_buffer: pointer to a buffer (assumed to be of at least rec_len length) to place data into.
 			int *rec_len: a pointer to an integer containing how much data should be received.
-		

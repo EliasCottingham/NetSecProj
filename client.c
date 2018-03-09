@@ -21,7 +21,7 @@ int checkHash(char *message, int size);
 void sha256_to_string(unsigned char hash[SHA256_DIGEST_LENGTH], char out[65]);
 
 int main(int argc, char *argv[]){
-  /*Client takes port number and ip as parameters.*/
+  /*The FTP client takes a port, ip, and the directory from which it reads and writes.*/
   struct sockaddr_in server;
   int sock, connection, len, rec_len;
   int32_t size;
@@ -80,14 +80,13 @@ int main(int argc, char *argv[]){
   printf("Client Path: {%s}\n", path);
 
   printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
-
+  //Start accepting, parcing and executing commands
   while(1){
     printf("\n->");
     fflush(stdin);
     fgets(cmd, 100, stdin);
     switch(cmd_helper(cmd)){
       case(0):
-      //TODO: send hash
         printf("Put cmd.\n");
         cmd_type = "P ";
         if (get_fname(cmd, &fname)==-1){
@@ -118,7 +117,6 @@ int main(int argc, char *argv[]){
         fread(hash_buff, 1, 64, hash_file);
 
         stat(totalpath, &sb);
-        // size_t size = htonl(sb.st_size);
         // Size here is the overall size of the message sent to the ids.  Of format <char type of command><string filename><EOF delimited file>
         size = htonl(strlen(cmd_type)+(strlen(fname)+1)+sb.st_size + 64);
         send(sock, &size, sizeof(int32_t), 0);
@@ -165,7 +163,7 @@ int main(int argc, char *argv[]){
         }
         FILE *out_file;
         out_file = fopen(totalpath, "wb");
-        // fwrite(response_buffer, 1, rec_len, out_file);
+
         size_t nwrite;
         printf("Receive len: %d\n", rec_len);
         for(nwrite =0; nwrite <rec_len-64;
@@ -193,7 +191,7 @@ int main(int argc, char *argv[]){
         size = htonl(strlen(cmd_type));
         send(sock, &size, sizeof(int32_t), 0);
         send(sock, cmd_type, strlen(cmd_type), 0);
-        // free(path);
+
         exit(1);
       case(-1):
         printf("Error: Command not recognized.\n");
@@ -226,7 +224,6 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
     size = recv(*sock, buffer, exp_size, 0);
     if (size <= 0){
       printf("READ 0 bytes trasmission ended.\n");
-      // Shouldn't this error out? -msc
       break;
     }
     memcpy((*response_buffer+size_holder), buffer, size);

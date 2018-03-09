@@ -1,3 +1,6 @@
+// Server Handler
+// Group 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -78,7 +81,7 @@ int main(int argc, char *argv[])
 			free(ftp_dir);
 			exit(1);
 		}
-    	
+
     	ids_file = fopen(ids_filename, "rb");
 
 		ids_logname = argv[4];

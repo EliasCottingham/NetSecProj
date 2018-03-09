@@ -1,3 +1,6 @@
+// FTP
+// Group 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -24,7 +27,7 @@ transport FTPExecute(transport input, char *ftp_dir)
 			char file_path[file_name_size];
 			//We can use sprintf and %s because null bytes are illegal in filenames in Unix
 			sprintf(file_path, "%s%s", ftp_dir,input.message+2);
-			// Open the file 
+			// Open the file
 			FILE *get_file = fopen(file_path, "r");
 			if(get_file == NULL){
 				char *response_message = "Couldn't open file\n";
