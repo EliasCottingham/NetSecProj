@@ -13,23 +13,18 @@
 transport FTPExecute(transport input, char *ftp_dir)
 {
 	transport response = {input.size, input.message};
-	// printf("Message: #%s# which has length: %d\n", input.message, strlen(input.message));
-	// printf("Message plus strlen: #%s#\n", input.message +strlen(input.message)+1);
-	// printf("Message size: %d\n", input.size);
-	// printf("FTP_dir: #%s#\n", ftp_dir);
-	// printf("filename: %s\n", input.message+2);
 	//first character is the mode
 	char mode = input.message[0];
 
 	switch(mode) {
 		//get command
 		case 'G': {
-			//TODO: IDS sends wrong size
 			//byte 3 and on are the filename
 			int file_name_size = strlen(ftp_dir) + strlen(input.message+2) +1;
 			char file_path[file_name_size];
 			//We can use sprintf and %s because null bytes are illegal in filenames in Unix
 			sprintf(file_path, "%s%s", ftp_dir,input.message+2);
+			// Open the file 
 			FILE *get_file = fopen(file_path, "r");
 			if(get_file == NULL){
 				char *response_message = "Couldn't open file\n";
@@ -52,7 +47,7 @@ transport FTPExecute(transport input, char *ftp_dir)
 				if(hash_file != NULL){
 					nread += fread(response.message, sizeof(char), 64, hash_file);
 				}
-				printf("Message to send %s\n", response.message);
+
 				//read the file into response.message
 				for(; nread <file_size+64;
 					(nread+= fread(response.message+nread, sizeof(char), CHUNK, get_file)));
@@ -63,7 +58,7 @@ transport FTPExecute(transport input, char *ftp_dir)
 		break;
 		//put command
 		case 'P' : {
-			// printf("Message: %s\n", input.message+ strlen(input.message)+1);
+			//get the file size and name
 			int file_size = input.size- strlen(input.message)-1- 64;
 			int file_name_size = strlen(ftp_dir) + strlen(input.message+2) +1;
 			char file_path[file_name_size];

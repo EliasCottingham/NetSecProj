@@ -14,30 +14,11 @@
 
 char *ScanData(char *data, int length, transport signatures[])
 {
-  char *delim ="|";
   if(strlen(data) ==1){
-			printf("Early return\n");
       return "";
   }
-	/*
-	//iterate through signatures checking if data matches signature
-	for(;signatures != NULL; signatures){
-		printf("Signatures message: %s\n", signatures->message);
-		char sig_copy[signatures->size];
-		memcpy(sig_copy, signatures->message,signatures->size);
-		//get id and data
-		char *id = strtok(sig_copy, delim);
-		char *info = strtok(NULL,delim);
-		printf("ID: #%s# info: #%s#\n", id, info);
-		//use memmem incase of null bytes in message
-		if(memmem(data, length-1, info, signatures->size-strlen(id)) !=NULL){
-			printf("This signature matched: #%s# this piece of data: #%s#\n", info, data);
-			return id;
-		}
-	}
-	*/
 	char *id;
-	for(;signatures->size != NULL; signatures++){
+	for(;signatures->size != 0; signatures++){
 		id = malloc(signatures->size+1);
 		memset(id,'\0',signatures->size);
 		memcpy(id, signatures->message, signatures->size);
@@ -93,7 +74,6 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 	memset(size_buffer, 0, sizeof(int32_t));
 
 
-	int test_holder;
 	while(1)
 	{
 		printf("IN IDS RECEIVING LOOP\n");
@@ -137,7 +117,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 
 		transport input = {size, message};
 		response = FTPExecute(input, ftp_dir);
-		
+
 		send_buffer = (char *) calloc(response.size, sizeof(char));
 
 		int original_pos;

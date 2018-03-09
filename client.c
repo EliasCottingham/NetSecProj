@@ -238,6 +238,7 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
 
 // Takes first 64 bytes as hash and verifies it with the rest of the file
 int checkHash(char *message, int size){
+  //Get the hash of the file
   unsigned char hash[SHA256_DIGEST_LENGTH];
   SHA256_CTX sha256;
   SHA256_Init(&sha256);
@@ -247,11 +248,10 @@ int checkHash(char *message, int size){
   SHA256_Update(&sha256, file, size-64);
   SHA256_Final(hash, &sha256);
   sha256_to_string(hash, hash_string);
-  printf("hash_string: %s\n", hash_string);
+  // Compare the calculated hash with the sent one
   char message_hash[65];
   strncpy(message_hash, message, 64);
   message_hash[64] = 0;
-  printf("message_hash: %s\n", message_hash);
   if(strncmp(message, hash_string, 64) != 0){
     return -1;
   }

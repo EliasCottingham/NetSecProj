@@ -2,7 +2,7 @@
 
 Michael Chess
 Elias Cottingham
-Samuel Tbeile
+Sammy Tbeile
 
 
 NOTE: CHUNK should be 1440 for accurate approximation of MTU of ethernet.  This is because the MTU for ethernet is 1518 less the ethernet header is 1500 less the TCP header is minimum 1440 (TCP header is variable).
@@ -13,6 +13,8 @@ Installation Guide:
 	Make is required as is a c compiler.
 	On fresh Ubuntu systems "sudo apt-get install build-essential" may be required.
 	Otherwise just 'make' should do the trick.
+    Additionally openssl and libopenssl are required
+    On fresh Ubuntu systems: "sudo apt-get install openssl libssl-dev"
 
 
 Usage:
