@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <arpa/inet.h>
+#include <openssl/sha.h>
 
 #define CHUNK 1440
 
@@ -16,6 +17,8 @@ int get_fname(char* cmd, char** fname);
 int get_path(char* path, char* fname, char** totalpath, int check_exists);
 void recv_response(int* sock, char** response_buffer, int* rec_len);
 int get_fhash(char *fname, char** hash_fname);
+int checkHash(char *message, int size);
+void sha256_to_string(unsigned char hash[SHA256_DIGEST_LENGTH], char out[65]);
 
 int main(int argc, char *argv[]){
   /*Client takes port number and ip as parameters.*/
@@ -155,13 +158,18 @@ int main(int argc, char *argv[]){
         free(fname);
 
         recv_response(&sock, &response_buffer, &rec_len);
-
+        if(checkHash(response_buffer, rec_len) <0){
+          free(response_buffer);
+          printf("%s has an incorrect or missing hash value\n", fname );
+          break;
+        }
         FILE *out_file;
         out_file = fopen(totalpath, "wb");
         // fwrite(response_buffer, 1, rec_len, out_file);
         size_t nwrite;
-        for(nwrite =0; nwrite <rec_len;
-          (nwrite+= fwrite(response_buffer+nwrite, sizeof(char), rec_len, out_file)));
+        printf("Receive len: %d\n", rec_len);
+        for(nwrite =0; nwrite <rec_len-64;
+          (nwrite+= fwrite(response_buffer+nwrite+64, sizeof(char), rec_len-64, out_file)));
         fclose(out_file);
         printf("Response: %s\n", (response_buffer));
         free(response_buffer);
@@ -210,6 +218,7 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
   recv(*sock, len_buffer, sizeof(int32_t), 0);
   *rec_len = ntohl(net_size);
   *response_buffer = (char *) calloc(*rec_len + 1, sizeof(char));
+  memset(*response_buffer, '\0', *rec_len+1);
   while(size_holder < *rec_len)
   {
     memset(buffer, 0, sizeof(buffer));
@@ -227,7 +236,38 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
 }
 
 
+// Takes first 64 bytes as hash and verifies it with the rest of the file
+int checkHash(char *message, int size){
+  unsigned char hash[SHA256_DIGEST_LENGTH];
+  SHA256_CTX sha256;
+  SHA256_Init(&sha256);
+  char file[size-64];
+  char hash_string[65];
+  memcpy(file, message+64, size-64);
+  SHA256_Update(&sha256, file, size-64);
+  SHA256_Final(hash, &sha256);
+  sha256_to_string(hash, hash_string);
+  printf("hash_string: %s\n", hash_string);
+  char message_hash[65];
+  strncpy(message_hash, message, 64);
+  message_hash[64] = 0;
+  printf("message_hash: %s\n", message_hash);
+  if(strncmp(message, hash_string, 64) != 0){
+    return -1;
+  }
+  return 1;
 
+
+}
+
+//Helper function to convert hash to string
+void sha256_to_string(unsigned char hash[SHA256_DIGEST_LENGTH], char out[65]){
+  int i =0;
+  for(i =0; i< SHA256_DIGEST_LENGTH; i++){
+    sprintf(out+(i*2), "%02x", hash[i]);
+  }
+  out[64] = 0;
+}
 
 int get_fname(char* cmd, char** fname){
   /* Helper: Gets the file name and makes sure it is not a directory */

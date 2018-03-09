@@ -42,12 +42,21 @@ transport FTPExecute(transport input, char *ftp_dir)
 				struct stat sb;
 				stat(file_path, &sb);
 				int file_size = sb.st_size;
-				response.message = (char *) malloc(file_size);
-				size_t nread;
+				// Read in the hash
+				char hash_name[strlen(file_path) + 6];
+				sprintf(hash_name, "%s_hash", file_path);
+				FILE *hash_file = fopen(hash_name, "r");
+				response.message = (char *) malloc(file_size+64);
+				memset(response.message, '\0', file_size+64);
+				size_t nread = 0;
+				if(hash_file != NULL){
+					nread += fread(response.message, sizeof(char), 64, hash_file);
+				}
+				printf("Message to send %s\n", response.message);
 				//read the file into response.message
-				for(nread =0; nread <file_size;
+				for(; nread <file_size+64;
 					(nread+= fread(response.message+nread, sizeof(char), CHUNK, get_file)));
-				response.size = file_size;
+				response.size = file_size+64;
 				fclose(get_file);
 			}
 		}

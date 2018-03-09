@@ -4,6 +4,8 @@ CXX = g++
 CFLAGS   = -g -Wall $(INCLUDES)
 CXXFLAGS = -g -Wall $(INCLUDES)
 
+LDLIBS=-lcrypto
+
 .PHONY: default
 default: server_handler client
 	rm -f *.o *~
