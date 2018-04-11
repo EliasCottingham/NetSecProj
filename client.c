@@ -79,7 +79,7 @@ int main(int argc, char *argv[]){
 
   printf("Client Path: {%s}\n", path);
 
-  printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
+  printf("Ready to accept commands: \n\t'put <filename>'- will upload a file\n\t'get <filename>' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
   //Start accepting, parcing and executing commands
   while(1){
     printf("\n->");

@@ -25,13 +25,20 @@ Usage:
 	make will result in two executables: server_handler and client.
 	server_handler should be run with:
 		./server_handler <port> <ftp dir path> <ids signature file> <ids log file>
-		e.g.
+		Example: [Fake filenames]
 			./server_handler 10001 ./ftp_dir test_ids_sigs.txt ids_file.txt
 	client should be run with:
 		./client <port> <ip> <client dir path>
-		e.g.
+		Example: [Fake filenames]
 			./client 10001 127.0.0.1 ./client_dir
 
+	Using the ftp server. Client side:
+		Once the client has started up. The user will be prompted with a list of commands:
+			'put <filename>' - will upload a file
+			'get <filename>' - will get a file
+			'ls' - lists the files on the FTP server
+			'exit' - quit the FTP client
+		From there the user will be allowed to type in any of the commands.
 
 
 Project structure:
