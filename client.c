@@ -19,6 +19,7 @@ void recv_response(int* sock, char** response_buffer, int* rec_len);
 int get_fhash(char *fname, char** hash_fname);
 int checkHash(char *message, int size);
 void sha256_to_string(unsigned char hash[SHA256_DIGEST_LENGTH], char out[65]);
+void calcHash(char *message, int size, char hash_string[65]);
 
 int main(int argc, char *argv[]){
   /*The FTP client takes a port, ip, and the directory from which it reads and writes.*/
@@ -28,8 +29,6 @@ int main(int argc, char *argv[]){
   char cmd[100], buff[CHUNK];
   char* path;
   char* fname;
-  char* fname_hash;
-  char* totalpath_hash;
   char* totalpath;
   char* cmd_type;
   char* response_buffer;
@@ -79,7 +78,7 @@ int main(int argc, char *argv[]){
 
   printf("Client Path: {%s}\n", path);
 
-  printf("Ready to accept commands: \n\t'put <filename>'- will upload a file\n\t'get <filename>' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
+  printf("Ready to accept commands: \n\t'put <filename> - will upload a file\n\t'get <filename>'' - will get a file\n\t'ls' - lists the files on the FTP server\n\t'exit' - quit the FTP client");
   //Start accepting, parcing and executing commands
   while(1){
     printf("\n->");
@@ -96,27 +95,20 @@ int main(int argc, char *argv[]){
           free(totalpath);
           break;
         }
-        //Verify hash file
-        if (get_fhash(fname, &fname_hash) ==-1) {
-          printf("Error: a file of <filename>_hash must exist when transmitting files");
-          free(fname_hash);
-          free(fname);
-          free(totalpath);
-          break;
-        } else if(get_path(path, fname_hash, &totalpath_hash, 1) == -1){
-          free(fname_hash);
-          free(fname);
-          free(totalpath);
-          free(totalpath_hash);
-          break;
-        }
-        // Read in the hash from the file
-        FILE *hash_file;
-        hash_file = fopen(totalpath_hash, "rb");
-        char hash_buff[65];
-        fread(hash_buff, 1, 64, hash_file);
 
         stat(totalpath, &sb);
+        FILE *fp;
+        fp = fopen(totalpath, "rb");
+        char hash_buff[65];
+        size_t file_size = sb.st_size;
+        char *file_contents = malloc(file_size);
+        memset(file_contents,0, file_size);
+        size_t nread = 0;
+        while((nread += fread(file_contents + nread, 1, CHUNK, fp)) <file_size);
+        rewind(fp);
+        // char file_contents[sb.st_size];
+        calcHash(file_contents, file_size, hash_buff);
+        free(file_contents);
         // Size here is the overall size of the message sent to the ids.  Of format <char type of command><string filename><EOF delimited file>
         size = htonl(strlen(cmd_type)+(strlen(fname)+1)+sb.st_size + 64);
         send(sock, &size, sizeof(int32_t), 0);
@@ -124,9 +116,7 @@ int main(int argc, char *argv[]){
         send(sock, fname, strlen(fname)+1, 0);
         send(sock, hash_buff, 64, 0);
 
-        FILE *fp;
-        fp = fopen(totalpath, "rb");
-        size_t nread;
+        nread = 0;
         while((nread = fread(buff, 1, CHUNK, fp)) > 0){
           send(sock, buff, nread, 0);
         }
@@ -232,19 +222,23 @@ void recv_response(int* sock, char** response_buffer, int* rec_len){
   printf("Recieved a total length of: %d, which was written to 'response_buffer'\n", *rec_len);
 }
 
+//calculate a hash
+void calcHash(char *message, int size, char hash_string[65]){
+  unsigned char hash[SHA256_DIGEST_LENGTH];
+  SHA256_CTX sha256;
+  SHA256_Init(&sha256);
+  char file[size];
+  memcpy(file, message, size);
+  SHA256_Update(&sha256, file, size);
+  SHA256_Final(hash, &sha256);
+  sha256_to_string(hash, hash_string);
+}
 
 // Takes first 64 bytes as hash and verifies it with the rest of the file
 int checkHash(char *message, int size){
   //Get the hash of the file
-  unsigned char hash[SHA256_DIGEST_LENGTH];
-  SHA256_CTX sha256;
-  SHA256_Init(&sha256);
-  char file[size-64];
   char hash_string[65];
-  memcpy(file, message+64, size-64);
-  SHA256_Update(&sha256, file, size-64);
-  SHA256_Final(hash, &sha256);
-  sha256_to_string(hash, hash_string);
+  calcHash(message+64, size-64, hash_string);
   // Compare the calculated hash with the sent one
   char message_hash[65];
   strncpy(message_hash, message, 64);

@@ -119,12 +119,12 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 
 		transport input = {size, message};
 		response = FTPExecute(input, ftp_dir);
-
+    printf("%s\n", response.message);
 		send_buffer = (char *) calloc(response.size, sizeof(char));
 
 		int original_pos;
 		int send_buffer_pos = 0;
-
+    size_holder = 0;
 		for(original_pos = 0; original_pos < response.size; original_pos+=CHUNK)
 		{
 			send_size = ((response.size-original_pos) < CHUNK) ? (response.size-original_pos): CHUNK;
@@ -135,7 +135,9 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 				send_buffer_pos += send_size;
 			} else {
 				WriteToLog(ids_logname, scan_result, ip);
+        free(scan_result);
 			}
+      size_holder += send_size;
 		}
 
 		printf("\nSEND LOOP END\nsize expedted: %d, ofset in original: %d, size sent: %d\n", response.size, original_pos, send_buffer_pos);
