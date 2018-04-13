@@ -91,7 +91,7 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 				}
 			}
 		}
-		continuing_loop;
+		continuing_loop:
 		size = ntohl(net_size);
 		printf("Expected Size: %d\n", size);
 		size_holder = 0;
