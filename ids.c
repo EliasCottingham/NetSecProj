@@ -79,11 +79,19 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 	while(1)
 	{
 		printf("IN IDS RECEIVING LOOP\n");
-		if(recv(client_socket, size_buffer, sizeof(int32_t), 0) <= 0){
-			printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
-			break;
-		}
 
+		while(1){
+			if(recv(client_socket, size_buffer, sizeof(int32_t), 0) <= 0){
+				printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
+				goto break_from_receiving;
+			} else {
+				char *size_scan_result = ScanData(size_buffer, sizeof(int32_t), ids_signatures);
+				if(strlen(size_scan_result) != 0){
+					goto continuing_loop;
+				}
+			}
+		}
+		continuing_loop;
 		size = ntohl(net_size);
 		printf("Expected Size: %d\n", size);
 		size_holder = 0;
