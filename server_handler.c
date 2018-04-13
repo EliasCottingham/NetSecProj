@@ -116,6 +116,9 @@ int main(int argc, char *argv[])
 		}
 		printf("len buffer: %s\n", len_buffer);
 		signatures[i].size = atoi(len_buffer); //This is just the integer length of the
+		if(signatures[i].size > 32){
+			ErrorOut("Error Reading IDS signaturs file.  Signatures must be less than 32 bytes");
+		}
 		fread(&temp, 1, 1, ids_file);
 		if(temp != '|') ErrorOut("Error reading IDS file on expected pipe ('|') separator. Format per line should be xx|id|xx|<pattern>\n where xx is two bytes for an integer representing length and <pattern> is the pattern");
 
