@@ -17,9 +17,9 @@
 
 char *ScanData(char *data, int length, transport signatures[])
 {
-  if(strlen(data) ==1){
-      return "";
-  }
+ // if(strlen(data) ==1){
+   //   return "";
+  //}
 	char *id;
 	for(;signatures->size != 0; signatures++){
 		id = malloc(signatures->size+1);
@@ -79,11 +79,23 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 	while(1)
 	{
 		printf("IN IDS RECEIVING LOOP\n");
-		if(recv(client_socket, size_buffer, sizeof(int32_t), 0) <= 0){
-			printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
-			break;
-		}
 
+		while(1){
+			if(recv(client_socket, size_buffer, sizeof(int32_t), 0) <= 0){
+				printf("READ 0 bytes FROM CLOSED CLIENT SOCKET\n");
+				goto break_from_receiving;
+			} else {
+				char *size_scan_result = ScanData(size_buffer, sizeof(int32_t), ids_signatures);
+				printf("\n%d\n", net_size);
+				if(strlen(size_scan_result) == 0){
+					printf("escaping size loop\n");
+					goto continuing_loop;
+				} else {
+					printf("matched size\n");
+				}
+			}
+		}
+		continuing_loop:
 		size = ntohl(net_size);
 		printf("Expected Size: %d\n", size);
 		size_holder = 0;
@@ -120,6 +132,10 @@ void IDSHandler(int client_socket, transport ids_signatures[], char * ftp_dir, c
 		transport input = {size, message};
 		response = FTPExecute(input, ftp_dir);
     printf("%s\n", response.message);
+		char *scan_response_size = ScanData(&response.size, sizeof(int32_t), ids_signatures);
+		if(strlen(scan_response_size) != 0){
+			response.size = 0;
+		}
 		send_buffer = (char *) calloc(response.size, sizeof(char));
 
 		int original_pos;

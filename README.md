@@ -40,6 +40,11 @@ Usage:
 			'exit' - quit the FTP client
 		From there the user will be allowed to type in any of the commands.
 
+Inserting patterns into the ids signatures file:
+	There are two ways of doing this.  One is to directly edit the ids signatures file yourself.  This means putting in the form <name-size (two charaters)>|<name>|<pattern-size(two characters)>|<pattern> where pattern is arbitrary bytes up to 32 and the sizes match.  Otherwise you can use the pattern loader. The pattern loader is designed to facilitate the loading of hexadecimal patterns.  The user provides the file name, signature name, and signature contents in hexadecimal. 
+	python3 pattern_loader <ids-signature-file> <signature-name> <signature-content>
+	example:
+	python3 pattern_loader my_ids_sigs.txt newname deadbeef
 
 Project structure:
 
